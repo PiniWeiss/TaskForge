@@ -19,6 +19,8 @@ export interface Project {
 export interface Issue {
   id: string;
   projectId: string;
+  /** Per-project sequence (1, 2, 3, …) assigned on create; never changes and is never reused. */
+  number: number;
   title: string;
   description?: string;
   status: IssueStatus;

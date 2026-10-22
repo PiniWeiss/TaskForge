@@ -44,7 +44,7 @@ export const listProjectsQuerySchema = z.object({
 });
 export type ListProjectsQuery = z.output<typeof listProjectsQuerySchema>;
 
-export const ISSUE_SORT_FIELDS = ['createdAt', 'priority', 'status', 'title'] as const;
+export const ISSUE_SORT_FIELDS = ['number', 'createdAt', 'priority', 'status', 'title'] as const;
 export type IssueSortField = (typeof ISSUE_SORT_FIELDS)[number];
 
 export const listIssuesQuerySchema = z.object({
@@ -52,5 +52,13 @@ export const listIssuesQuerySchema = z.object({
   sort: sortParam(ISSUE_SORT_FIELDS, '-createdAt'),
   status: caseInsensitive(issueStatusSchema).optional(),
   priority: caseInsensitive(issuePrioritySchema).optional(),
+  /** Free-text search on title (or `#12` / `12` for an issue number); blank means no search. */
+  q: z
+    .string()
+    .trim()
+    .normalize('NFC')
+    .max(200)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
 });
 export type ListIssuesQuery = z.output<typeof listIssuesQuerySchema>;

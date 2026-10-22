@@ -2,12 +2,12 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Issue } from '@taskforge/shared';
-import type { IssueRepository, IssueSortField, ListOptions } from '../types.ts';
+import type { IssueRepository, IssueSortField, ListOptions, NewIssue } from '../types.ts';
 
 const P1 = '10000000-0000-4000-8000-000000000001';
 const P2 = '10000000-0000-4000-8000-000000000002';
 
-function issue(n: number, overrides: Partial<Issue> = {}): Issue {
+function issue(n: number, overrides: Partial<NewIssue> = {}): NewIssue {
   const at = new Date(Date.UTC(2026, 0, 1, 0, n)).toISOString();
   return {
     id: `20000000-0000-4000-8000-${String(n).padStart(12, '0')}`,
@@ -46,7 +46,7 @@ export function describeIssueRepositoryContract(
 
     it('creates and finds an issue by id', async () => {
       const created = await repo.create(issue(1, { description: 'תיאור 🐛' }));
-      expect(created).toEqual(issue(1, { description: 'תיאור 🐛' }));
+      expect(created).toEqual({ ...issue(1, { description: 'תיאור 🐛' }), number: 1 });
       expect(await repo.findById(created.id)).toEqual(created);
     });
 
@@ -61,6 +61,20 @@ export function describeIssueRepositoryContract(
       expect(found?.title).toBe('Issue 1');
       if (found) found.title = 'mutated again';
       expect((await repo.findById(issue(1).id))?.title).toBe('Issue 1');
+    });
+
+    it('numbers issues per project starting at 1', async () => {
+      const a = await repo.create(issue(1));
+      const b = await repo.create(issue(2, { projectId: P2 }));
+      const c = await repo.create(issue(3));
+      expect([a.number, b.number, c.number]).toEqual([1, 1, 2]);
+    });
+
+    it('never reuses a number, even after the newest issue is deleted', async () => {
+      await repo.create(issue(1));
+      const second = await repo.create(issue(2));
+      await repo.delete(second.id);
+      expect((await repo.create(issue(3))).number).toBe(3);
     });
 
     it('lists only the issues of the given project with a total', async () => {
@@ -84,6 +98,37 @@ export function describeIssueRepositoryContract(
       const both = await repo.listByProject(P1, { status: 'open', priority: 'high' }, opts());
       expect(titlesOf(both.items)).toEqual(['Issue 1']);
       expect(both.total).toBe(1);
+    });
+
+    it('searches titles case-insensitively and Unicode-normalized', async () => {
+      await repo.create(issue(1, { title: 'Refund webhook times out' }));
+      await repo.create(issue(2, { title: 'שָׁלוֹם checkout' }));
+      await repo.create(issue(3, { title: 'Export CSV' }));
+
+      const byWord = await repo.listByProject(P1, { q: 'WEBHOOK' }, opts());
+      expect(titlesOf(byWord.items)).toEqual(['Refund webhook times out']);
+      const hebrew = await repo.listByProject(P1, { q: 'שָׁלוֹם'.normalize('NFD') }, opts());
+      expect(titlesOf(hebrew.items)).toEqual(['שָׁלוֹם checkout']);
+      const none = await repo.listByProject(P1, { q: 'nothing' }, opts());
+      expect(none).toEqual({ items: [], total: 0 });
+    });
+
+    it('finds an issue by number with or without #, combined with other filters', async () => {
+      await repo.create(issue(1, { title: 'first', status: 'closed' }));
+      await repo.create(issue(2, { title: 'second' }));
+      expect(titlesOf((await repo.listByProject(P1, { q: '#2' }, opts())).items)).toEqual([
+        'second',
+      ]);
+      expect(titlesOf((await repo.listByProject(P1, { q: '1' }, opts())).items)).toEqual(['first']);
+      const filtered = await repo.listByProject(P1, { q: '1', status: 'open' }, opts());
+      expect(filtered.total).toBe(0);
+    });
+
+    it('sorts by number', async () => {
+      await repo.create(issue(3, { title: 'a' }));
+      await repo.create(issue(1, { title: 'b' }));
+      const desc = await repo.listByProject(P1, {}, opts({ field: 'number', dir: 'desc' }));
+      expect(titlesOf(desc.items)).toEqual(['b', 'a']);
     });
 
     it('sorts by createdAt in both directions', async () => {
@@ -143,6 +188,7 @@ export function describeIssueRepositoryContract(
       const expected: Issue = {
         id: created.id,
         projectId: created.projectId,
+        number: created.number,
         createdAt: created.createdAt,
         title: 'New',
         status: 'closed',

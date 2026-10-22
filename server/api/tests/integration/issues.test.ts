@@ -35,6 +35,7 @@ describe('POST /projects/:projectId/issues', () => {
     expect(res.body).toEqual({
       id: expect.any(String) as unknown,
       projectId,
+      number: 1,
       title: 'Login fails',
       status: 'open',
       priority: 'high',
@@ -306,6 +307,49 @@ describe('GET /projects/:projectId/issues', () => {
     });
   });
 
+  it('numbers issues per project', async () => {
+    const other = await ctx.seedProject('Other');
+    const first = await createIssue({ title: 'a', priority: 'low' });
+    const elsewhere = await createIssue(
+      { title: 'b', priority: 'low' },
+      `/projects/${other.id}/issues`,
+    );
+    const second = await createIssue({ title: 'c', priority: 'low' });
+    expect([first.number, elsewhere.number, second.number]).toEqual([1, 1, 2]);
+  });
+
+  it('sorts by number', async () => {
+    await seedIssues();
+    const res = await request(ctx.app).get(`${base}?sort=number`).expect(200);
+    expect(titles(res.body)).toEqual(['בדיקה', 'Alpha', 'אבג', 'beta']);
+  });
+
+  it('searches titles with q, combined with filters', async () => {
+    await seedIssues();
+    const res = await request(ctx.app).get(`${base}?q=BET`).expect(200);
+    expect(titles(res.body)).toEqual(['beta']);
+    const hebrew = await request(ctx.app)
+      .get(`${base}?q=${encodeURIComponent('בדי')}`)
+      .expect(200);
+    expect(titles(hebrew.body)).toEqual(['בדיקה']);
+    const filtered = await request(ctx.app).get(`${base}?q=a&status=closed`).expect(200);
+    expect(titles(filtered.body)).toEqual(['Alpha']);
+  });
+
+  it('finds an issue by number with q=#n', async () => {
+    await seedIssues();
+    const res = await request(ctx.app)
+      .get(`${base}?q=${encodeURIComponent('#3')}`)
+      .expect(200);
+    expect(titles(res.body)).toEqual(['אבג']);
+  });
+
+  it('ignores a blank q', async () => {
+    await seedIssues();
+    const res = await request(ctx.app).get(`${base}?q=%20%20`).expect(200);
+    expect((res.body as { pagination: { total: number } }).pagination.total).toBe(4);
+  });
+
   it('returns 400 for invalid query parameters', async () => {
     const res = await request(ctx.app)
       .get(`${base}?status=done&sort=assignee&limit=101&offset=-1`)
@@ -314,7 +358,7 @@ describe('GET /projects/:projectId/issues', () => {
       errorBody(
         'VALIDATION_ERROR',
         'Invalid request: query.limit: must be at most 100; query.offset: must be at least 0; ' +
-          'query.sort: must be one of: createdAt, -createdAt, priority, -priority, status, -status, title, -title; ' +
+          'query.sort: must be one of: number, -number, createdAt, -createdAt, priority, -priority, status, -status, title, -title; ' +
           'query.status: must be one of: open, in_progress, closed',
       ),
     );
@@ -428,6 +472,7 @@ describe('PUT /projects/:projectId/issues/:issueId', () => {
     expect(replaced).toEqual({
       id: created.id,
       projectId,
+      number: created.number,
       title: 'New',
       priority: 'medium',
       status: 'open',

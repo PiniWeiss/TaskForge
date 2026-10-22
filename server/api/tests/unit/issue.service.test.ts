@@ -40,6 +40,7 @@ describe('IssueService.create', () => {
     expect(issue).toEqual({
       id: '00000000-0000-4000-8000-000000000001',
       projectId: project.id,
+      number: 1,
       title: 'Bug',
       priority: 'high',
       status: 'open',

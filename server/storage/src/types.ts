@@ -32,7 +32,15 @@ export interface ProjectRepository {
 export interface IssueFilter {
   status?: IssueStatus;
   priority?: IssuePriority;
+  /** Case-insensitive substring of the title, or an issue number written as `12` / `#12`. */
+  q?: string;
 }
+
+/** An issue as the service builds it; the repository assigns `number`. */
+export type NewIssue = Omit<Issue, 'number'>;
+
+/** Everything an update may change. */
+export type IssueChanges = Omit<Issue, 'id' | 'projectId' | 'number' | 'createdAt'>;
 
 export interface IssueRepository {
   findById(id: string): Promise<Issue | null>;
@@ -41,9 +49,10 @@ export interface IssueRepository {
     filter: IssueFilter,
     opts: ListOptions<IssueSortField>,
   ): Promise<Page<Issue>>;
-  create(issue: Issue): Promise<Issue>;
-  /** Replaces everything but `id`, `projectId` and `createdAt`. */
-  update(id: string, data: Omit<Issue, 'id' | 'projectId' | 'createdAt'>): Promise<Issue | null>;
+  /** Stores the issue under the next number of its project. Numbers are never reused, even after a delete. */
+  create(issue: NewIssue): Promise<Issue>;
+  /** Replaces everything but `id`, `projectId`, `number` and `createdAt`. */
+  update(id: string, data: IssueChanges): Promise<Issue | null>;
   delete(id: string): Promise<boolean>;
   deleteByProject(projectId: string): Promise<number>;
 }

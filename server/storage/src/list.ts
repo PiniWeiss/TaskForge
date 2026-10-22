@@ -8,13 +8,14 @@ import {
   type Page,
   type Project,
 } from '@taskforge/shared';
-import type { ListOptions } from './types.ts';
+import type { IssueFilter, ListOptions } from './types.ts';
 
 const collator = new Intl.Collator(['he', 'en']);
 
 type Compare<T> = (a: T, b: T) => number;
 
 const issueComparators: Record<IssueSortField, Compare<Issue>> = {
+  number: (a, b) => a.number - b.number,
   createdAt: (a, b) => a.createdAt.localeCompare(b.createdAt),
   priority: (a, b) => ISSUE_PRIORITIES.indexOf(a.priority) - ISSUE_PRIORITIES.indexOf(b.priority),
   status: (a, b) => ISSUE_STATUSES.indexOf(a.status) - ISSUE_STATUSES.indexOf(b.status),
@@ -41,4 +42,14 @@ export function paginate<T>(sorted: T[], { limit, offset }: ListOptions<string>)
 
 export function normalizeName(name: string): string {
   return name.normalize('NFC').toLocaleLowerCase();
+}
+
+/** Applies an IssueFilter in process; SQL implementations translate the same rules. */
+export function matchesIssueFilter(issue: Issue, filter: IssueFilter): boolean {
+  if (filter.status !== undefined && issue.status !== filter.status) return false;
+  if (filter.priority !== undefined && issue.priority !== filter.priority) return false;
+  if (filter.q === undefined) return true;
+  const numberMatch = /^#?(\d+)$/.exec(filter.q);
+  if (numberMatch && Number(numberMatch[1]) === issue.number) return true;
+  return normalizeName(issue.title).includes(normalizeName(filter.q));
 }
