@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+server/api/data/*
+!server/api/data/.gitkeep

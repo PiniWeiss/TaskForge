@@ -1,0 +1,3 @@
+// English message catalog.
+
+export {};
