@@ -20,9 +20,27 @@ function serverPackage(name: string): TestProjectInlineConfiguration {
   };
 }
 
+/** Client unit tests cover pure modules (API client, URL state, formatting); flows are Playwright's job. */
+const clientPackage: TestProjectInlineConfiguration = {
+  extends: false,
+  resolve: { conditions: sourceConditions },
+  ssr: { resolve: { conditions: sourceConditions, externalConditions: ['@taskforge/source'] } },
+  test: {
+    name: 'client',
+    root: './client',
+    include: ['tests/unit/**/*.test.ts'],
+    environment: 'node',
+  },
+};
+
 export default defineConfig({
   test: {
-    projects: [serverPackage('shared'), serverPackage('storage'), serverPackage('api')],
+    projects: [
+      serverPackage('shared'),
+      serverPackage('storage'),
+      serverPackage('api'),
+      clientPackage,
+    ],
     coverage: {
       provider: 'v8',
       include: ['server/*/src/**/*.ts'],
