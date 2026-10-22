@@ -1,4 +1,4 @@
-import type { Issue, ListResponse, PatchIssueInput } from '@taskforge/shared';
+import type { Issue, IssuePriority, ListResponse, PatchIssueInput } from '@taskforge/shared';
 import {
   keepPreviousData,
   useMutation,
@@ -90,6 +90,19 @@ export function usePatchIssue(projectId: string) {
     },
 
     onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: keys.issueLists(projectId) });
+      void queryClient.invalidateQueries({ queryKey: keys.counts(projectId) });
+    },
+  });
+}
+
+export function useCreateIssue(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { title: string; priority: IssuePriority }) =>
+      api.createIssue(projectId, input),
+    onSuccess: (created) => {
+      queryClient.setQueryData(keys.issue(projectId, created.id), created);
       void queryClient.invalidateQueries({ queryKey: keys.issueLists(projectId) });
       void queryClient.invalidateQueries({ queryKey: keys.counts(projectId) });
     },

@@ -1,12 +1,18 @@
+import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { useProjects } from '../api/projects.ts';
 import { paths } from '../app/paths.ts';
-import { useColumnVisibility } from '../issues/columns.ts';
-import { useIssueViewState } from '../issues/useIssueViewState.ts';
 import { IssuesPane } from '../components/issues/IssuesPane.tsx';
 import { IssueToolbar } from '../components/issues/IssueToolbar.tsx';
+import { QuickAdd } from '../components/issues/QuickAdd.tsx';
 import { ProjectHeader } from '../components/projects/ProjectHeader.tsx';
+import { Button } from '../components/ui/Button.tsx';
 import { ErrorState } from '../components/ui/ErrorState.tsx';
+import { IconPlus } from '../components/ui/icons.tsx';
+import { Kbd } from '../components/ui/Kbd.tsx';
+import { useHotkeys } from '../hooks/useHotkeys.ts';
+import { useColumnVisibility } from '../issues/columns.ts';
+import { useIssueViewState } from '../issues/useIssueViewState.ts';
 import type { ProjectOutletContext } from './IssueRoute.tsx';
 import styles from './ProjectView.module.css';
 
@@ -17,6 +23,12 @@ export function ProjectView() {
   const projects = useProjects();
   const [viewState, updateView] = useIssueViewState();
   const [columnVisibility, toggleColumn] = useColumnVisibility();
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+
+  const openQuickAdd = () => {
+    setQuickAddOpen(true);
+  };
+  useHotkeys({ c: openQuickAdd }, !quickAddOpen);
 
   if (projects.isPending) return null;
   if (projects.isError) {
@@ -52,18 +64,37 @@ export function ProjectView() {
   return (
     <div className={styles.layout}>
       <div className={styles.view}>
-        <ProjectHeader project={project} />
+        <ProjectHeader
+          project={project}
+          actions={
+            <Button variant="primary" onClick={openQuickAdd} aria-keyshortcuts="c">
+              <IconPlus /> New issue <Kbd className={styles.kbdOnSignal}>C</Kbd>
+            </Button>
+          }
+        />
         <IssueToolbar
           state={viewState}
           onChange={updateView}
           columnVisibility={columnVisibility}
           onToggleColumn={toggleColumn}
         />
+        {quickAddOpen && (
+          <QuickAdd
+            projectId={project.id}
+            onClose={() => {
+              setQuickAddOpen(false);
+            }}
+            onOpenIssue={(issue) => {
+              void navigate(paths.issue(project.id, issue.id, search));
+            }}
+          />
+        )}
         <IssuesPane
           project={project}
           state={viewState}
           columnVisibility={columnVisibility}
           selectedId={issueId}
+          onCreate={openQuickAdd}
           onSortChange={(sort) => {
             updateView({ sort });
           }}

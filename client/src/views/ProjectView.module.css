@@ -34,3 +34,14 @@
   text-decoration-color: var(--rule-strong);
   text-underline-offset: 3px;
 }
+
+.kbdOnSignal {
+  border-color: color-mix(in srgb, var(--signal-ink) 40%, transparent);
+  color: var(--signal-ink);
+}
+
+@container issues (max-width: 559px) {
+  .kbdOnSignal {
+    display: none;
+  }
+}
