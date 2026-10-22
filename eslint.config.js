@@ -21,7 +21,11 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        // ignoreRestSiblings: `const { id, ...rest } = x` is the idiom for omitting fields.
+        { argsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
       'no-restricted-syntax': [
         'error',
         { selector: 'ExportDefaultDeclaration', message: 'Use named exports.' },
