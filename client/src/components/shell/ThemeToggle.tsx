@@ -1,3 +1,4 @@
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { THEME_PREFERENCES, useTheme, type ThemePreference } from '../../theme/theme.tsx';
 import styles from './ThemeToggle.module.css';
 
@@ -9,7 +10,9 @@ export function ThemeToggle() {
 
   return (
     <fieldset className={styles.toggle}>
-      <legend className={styles.legend}>Theme</legend>
+      <VisuallyHidden.Root asChild>
+        <legend>Theme</legend>
+      </VisuallyHidden.Root>
       {THEME_PREFERENCES.map((option) => (
         <label key={option} className={styles.option}>
           <input

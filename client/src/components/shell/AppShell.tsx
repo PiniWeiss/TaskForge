@@ -1,4 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { useState, type ReactNode } from 'react';
 import { NARROW_QUERY, useMediaQuery } from '../../hooks/useMediaQuery.ts';
 import { IconClose, IconMenu } from '../ui/icons.tsx';
@@ -40,7 +41,9 @@ export function AppShell({ sidebar, title, children }: AppShellProps) {
         <Dialog.Portal>
           <Dialog.Overlay className={styles.overlay} />
           <Dialog.Content className={styles.drawer} aria-describedby={undefined}>
-            <Dialog.Title className={styles.srOnly}>Projects</Dialog.Title>
+            <VisuallyHidden.Root asChild>
+              <Dialog.Title>Projects</Dialog.Title>
+            </VisuallyHidden.Root>
             <Dialog.Close className={styles.drawerClose} aria-label="Close projects">
               <IconClose />
             </Dialog.Close>

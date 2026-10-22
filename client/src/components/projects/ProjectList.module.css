@@ -1,0 +1,41 @@
+.list {
+  display: grid;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  height: var(--row-height);
+  padding: 0 var(--s-4);
+}
+
+.skeletonBar {
+  height: 8px;
+  border-radius: var(--radius-1);
+  background: var(--rule);
+  animation: pulse 1.4s var(--ease-out) infinite alternate;
+}
+
+.wide {
+  width: 64%;
+}
+
+.short {
+  width: 44%;
+}
+
+.medium {
+  width: 56%;
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBar {
+    animation: none;
+  }
+}

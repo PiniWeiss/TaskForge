@@ -1,0 +1,50 @@
+.item {
+  position: relative;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: var(--row-height);
+  padding: 0 var(--s-4);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+
+.link:hover {
+  background: var(--paper-hover);
+  color: var(--ink);
+}
+
+.link:focus-visible {
+  outline-offset: -2px;
+}
+
+/* The open project reads as a tab into the page: same paper as the main area. */
+.active,
+.active:hover {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
+.count {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-regular);
+}

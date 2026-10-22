@@ -1,0 +1,34 @@
+.error {
+  max-width: var(--measure-read);
+  padding: var(--s-8) var(--s-6);
+}
+
+.compact {
+  padding: var(--s-2) var(--s-4);
+}
+
+.title {
+  font-weight: var(--weight-medium);
+}
+
+.message {
+  margin-top: var(--s-1);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+}
+
+.compact .title,
+.compact .message {
+  font-size: var(--text-meta);
+}
+
+.retry {
+  margin-top: var(--s-3);
+}
+
+.compact .retry {
+  margin-top: var(--s-2);
+  height: 24px;
+}
