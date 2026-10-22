@@ -1,13 +1,16 @@
 import { defineConfig, type TestProjectInlineConfiguration } from 'vitest/config';
 
 // Resolve workspace packages (@taskforge/*) to their TypeScript sources, not dist/.
-const sourceConditions = ['@taskforge/source', 'node', 'import', 'default'];
+// Do not list 'import' / 'default': Vite and Node add them per import kind, and Vitest passes
+// ssr.resolve.conditions to the worker as `node --conditions`, where a forced 'import' makes CJS
+// deps `require()` ESM entries (express → router → is-promise breaks async error handling).
+const sourceConditions = ['@taskforge/source', 'node'];
 
 function serverPackage(name: string): TestProjectInlineConfiguration {
   return {
     extends: false,
     resolve: { conditions: sourceConditions },
-    ssr: { resolve: { conditions: sourceConditions, externalConditions: sourceConditions } },
+    ssr: { resolve: { conditions: sourceConditions, externalConditions: ['@taskforge/source'] } },
     test: {
       name,
       root: `./server/${name}`,
