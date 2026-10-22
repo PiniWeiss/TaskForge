@@ -24,7 +24,7 @@
   margin-top: var(--s-4);
 }
 
-@media (max-width: 767px) {
+@container issues (max-width: 559px) {
   .empty {
     padding: var(--s-6) var(--s-4);
   }

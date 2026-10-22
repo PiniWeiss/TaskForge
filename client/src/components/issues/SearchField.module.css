@@ -2,7 +2,10 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  width: 280px;
+  /* Flex wraps lines using the basis, so keep it small and let the field grow to its max. */
+  flex: 1 1 200px;
+  max-width: 280px;
+  min-width: 160px;
   height: 28px;
   padding: 0 var(--s-2);
   border: 1px solid var(--rule-strong);
@@ -44,9 +47,10 @@
   display: none;
 }
 
-@media (max-width: 767px) {
+@container issues (max-width: 559px) {
   .field {
-    width: 100%;
+    flex-basis: 100%;
+    max-width: none;
   }
 
   .hint {

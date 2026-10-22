@@ -1,5 +1,6 @@
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2);
   min-height: var(--bar-height);
@@ -9,6 +10,7 @@
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2);
   min-width: 0;
@@ -18,17 +20,29 @@
   margin-left: auto;
 }
 
-/* Narrow: search on its own line, filters scroll sideways rather than wrap into a mess. */
-@media (max-width: 767px) {
+.compact {
+  display: none;
+}
+
+@container issues (max-width: 799px) {
+  .roomy {
+    display: none;
+  }
+
+  .compact {
+    display: inline-flex;
+  }
+}
+
+/* Compact: search on its own line, filters beneath it. */
+@container issues (max-width: 559px) {
   .toolbar {
-    flex-wrap: wrap;
     padding: var(--s-2) var(--s-4);
   }
 
   .filters {
     order: 1;
     flex: 1 0 100%;
-    flex-wrap: wrap;
   }
 
   .columns {

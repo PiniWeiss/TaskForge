@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { useProjects } from '../api/projects.ts';
 import { paths } from '../app/paths.ts';
 import { useColumnVisibility } from '../issues/columns.ts';
@@ -7,10 +7,13 @@ import { IssuesPane } from '../components/issues/IssuesPane.tsx';
 import { IssueToolbar } from '../components/issues/IssueToolbar.tsx';
 import { ProjectHeader } from '../components/projects/ProjectHeader.tsx';
 import { ErrorState } from '../components/ui/ErrorState.tsx';
+import type { ProjectOutletContext } from './IssueRoute.tsx';
 import styles from './ProjectView.module.css';
 
 export function ProjectView() {
-  const { projectId = '' } = useParams();
+  const { projectId = '', issueId } = useParams();
+  const { search } = useLocation();
+  const navigate = useNavigate();
   const projects = useProjects();
   const [viewState, updateView] = useIssueViewState();
   const [columnVisibility, toggleColumn] = useColumnVisibility();
@@ -39,29 +42,40 @@ export function ProjectView() {
     );
   }
 
+  const outletContext: ProjectOutletContext = {
+    project,
+    closePanel: () => {
+      void navigate(paths.project(project.id, search));
+    },
+  };
+
   return (
-    <div className={styles.view}>
-      <ProjectHeader project={project} />
-      <IssueToolbar
-        state={viewState}
-        onChange={updateView}
-        columnVisibility={columnVisibility}
-        onToggleColumn={toggleColumn}
-      />
-      <IssuesPane
-        project={project}
-        state={viewState}
-        columnVisibility={columnVisibility}
-        onSortChange={(sort) => {
-          updateView({ sort });
-        }}
-        onPageChange={(page) => {
-          updateView({ page });
-        }}
-        onClearFilters={() => {
-          updateView({ status: undefined, priority: undefined, q: '' });
-        }}
-      />
+    <div className={styles.layout}>
+      <div className={styles.view}>
+        <ProjectHeader project={project} />
+        <IssueToolbar
+          state={viewState}
+          onChange={updateView}
+          columnVisibility={columnVisibility}
+          onToggleColumn={toggleColumn}
+        />
+        <IssuesPane
+          project={project}
+          state={viewState}
+          columnVisibility={columnVisibility}
+          selectedId={issueId}
+          onSortChange={(sort) => {
+            updateView({ sort });
+          }}
+          onPageChange={(page) => {
+            updateView({ page });
+          }}
+          onClearFilters={() => {
+            updateView({ status: undefined, priority: undefined, q: '' });
+          }}
+        />
+      </div>
+      <Outlet context={outletContext} />
     </div>
   );
 }

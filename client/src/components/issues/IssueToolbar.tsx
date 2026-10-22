@@ -5,7 +5,6 @@ import {
   type IssueStatus,
 } from '@taskforge/shared';
 import type { Ref } from 'react';
-import { NARROW_QUERY, useMediaQuery } from '../../hooks/useMediaQuery.ts';
 import {
   COLUMN_LABELS,
   OPTIONAL_COLUMNS,
@@ -50,7 +49,6 @@ export function IssueToolbar({
   onToggleColumn,
   searchRef,
 }: IssueToolbarProps) {
-  const narrow = useMediaQuery(NARROW_QUERY);
   const onStatusChange = (value: StatusChoice) => {
     onChange({ status: value === 'all' ? undefined : value });
   };
@@ -65,21 +63,22 @@ export function IssueToolbar({
         }}
       />
       <div className={styles.filters}>
-        {narrow ? (
-          <SelectMenu
-            label="Status"
-            options={STATUS_OPTIONS}
-            value={state.status ?? 'all'}
-            onChange={onStatusChange}
-          />
-        ) : (
-          <Segmented
-            legend="Status"
-            options={STATUS_OPTIONS}
-            value={state.status ?? 'all'}
-            onChange={onStatusChange}
-          />
-        )}
+        {/* One of these is display:none at any width (container query), so only one is ever
+            in the accessibility tree. */}
+        <Segmented
+          className={styles.roomy}
+          legend="Status"
+          options={STATUS_OPTIONS}
+          value={state.status ?? 'all'}
+          onChange={onStatusChange}
+        />
+        <SelectMenu
+          className={styles.compact}
+          label="Status"
+          options={STATUS_OPTIONS}
+          value={state.status ?? 'all'}
+          onChange={onStatusChange}
+        />
         <SelectMenu
           label="Priority"
           options={PRIORITY_OPTIONS}

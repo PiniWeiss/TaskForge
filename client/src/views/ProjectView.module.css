@@ -1,7 +1,16 @@
+.layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .view {
+  /* The table and toolbar respond to the room they have, which shrinks when the panel opens. */
+  container: issues / inline-size;
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 }
 

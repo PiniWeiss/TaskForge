@@ -22,7 +22,7 @@
   color: var(--status-closed);
 }
 
-@media (max-width: 767px) {
+@container issues (max-width: 559px) {
   .narrowHidden {
     position: absolute;
     width: 1px;

@@ -31,7 +31,7 @@
   font-family: var(--font-mono);
 }
 
-@media (max-width: 767px) {
+@container issues (max-width: 559px) {
   .footer {
     padding: var(--s-1) var(--s-4);
   }

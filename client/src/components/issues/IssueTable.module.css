@@ -90,7 +90,8 @@
   color: var(--ink);
   text-decoration: none;
   unicode-bidi: plaintext;
-  text-align: start;
+  /* Hebrew titles keep RTL order but line up with the column, so the scan line stays straight. */
+  text-align: left;
 }
 
 .titleLink:hover {
@@ -135,17 +136,16 @@ th.colCreated {
   text-align: right;
 }
 
-@media (max-width: 1023px) {
-  .colPriority,
+/* Column drop-off follows the width of the issues column, not the window. */
+@container issues (max-width: 639px) {
   .colCreated {
-    width: 96px;
+    display: none;
   }
 }
 
-/* Narrow: keep ID, title and status; priority and created drop off. */
-@media (max-width: 767px) {
-  .colPriority,
-  .colCreated {
+/* Compact: keep ID, title and a glyph-only status. */
+@container issues (max-width: 559px) {
+  .colPriority {
     display: none;
   }
 

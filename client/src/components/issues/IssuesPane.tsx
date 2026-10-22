@@ -17,6 +17,7 @@ interface IssuesPaneProps {
   onClearFilters: () => void;
   onCreate?: () => void;
   columnVisibility: ColumnVisibility;
+  selectedId?: string;
 }
 
 /** The scrolling table region: loading, error, empty, or the rows. */
@@ -28,6 +29,7 @@ export function IssuesPane({
   onClearFilters,
   onCreate,
   columnVisibility,
+  selectedId,
 }: IssuesPaneProps) {
   const issues = useIssues(project.id, toListParams(state));
 
@@ -79,6 +81,7 @@ export function IssuesPane({
         sort={state.sort}
         onSortChange={onSortChange}
         columnVisibility={columnVisibility}
+        selectedId={selectedId}
         stale={issues.isPlaceholderData}
       />
     );

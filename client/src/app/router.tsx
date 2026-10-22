@@ -1,6 +1,7 @@
 import { createBrowserRouter, type RouteObject } from 'react-router';
 import { Specimen } from '../dev/Specimen.tsx';
 import { HomeView } from '../views/HomeView.tsx';
+import { IssueRoute } from '../views/IssueRoute.tsx';
 import { ProjectView } from '../views/ProjectView.tsx';
 import { RootLayout } from './RootLayout.tsx';
 
@@ -14,7 +15,11 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <HomeView /> },
-      { path: 'p/:projectId', element: <ProjectView /> },
+      {
+        path: 'p/:projectId',
+        element: <ProjectView />,
+        children: [{ path: 'i/:issueId', element: <IssueRoute /> }],
+      },
       ...devRoutes,
     ],
   },
