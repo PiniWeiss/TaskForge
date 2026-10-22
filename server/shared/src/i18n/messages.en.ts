@@ -6,6 +6,7 @@ export const messagesEn = {
   'error.notFound.project': 'Project {id} not found',
   'error.notFound.issue': 'Issue {id} not found',
   'error.notFound.route': 'Route {method} {path} not found',
+  'error.conflict.projectName': 'A project named "{name}" already exists',
   'error.internal': 'Internal server error',
 
   'validation.required': 'is required',

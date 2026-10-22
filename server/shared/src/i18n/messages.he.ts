@@ -8,6 +8,7 @@ export const messagesHe: Record<MessageKey, string> = {
   'error.notFound.project': 'הפרויקט {id} לא נמצא',
   'error.notFound.issue': 'הסוגיה {id} לא נמצאה',
   'error.notFound.route': 'הנתיב {method} {path} לא נמצא',
+  'error.conflict.projectName': 'פרויקט בשם "{name}" כבר קיים',
   'error.internal': 'שגיאת שרת פנימית',
 
   'validation.required': 'שדה חובה',

@@ -35,6 +35,15 @@ function caseInsensitive<T extends z.ZodType<unknown, string>>(schema: T) {
   return z.string().toLowerCase().pipe(schema);
 }
 
+export const PROJECT_SORT_FIELDS = ['name'] as const;
+export type ProjectSortField = (typeof PROJECT_SORT_FIELDS)[number];
+
+export const listProjectsQuerySchema = z.object({
+  ...paginationShape,
+  sort: sortParam(PROJECT_SORT_FIELDS, 'name'),
+});
+export type ListProjectsQuery = z.output<typeof listProjectsQuerySchema>;
+
 export const ISSUE_SORT_FIELDS = ['createdAt', 'priority', 'status', 'title'] as const;
 export type IssueSortField = (typeof ISSUE_SORT_FIELDS)[number];
 
