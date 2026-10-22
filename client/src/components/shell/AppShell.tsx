@@ -8,12 +8,10 @@ import styles from './AppShell.module.css';
 interface AppShellProps {
   /** Rendered in a fixed column on wide screens and in a drawer on narrow ones. */
   sidebar: (props: { onNavigate: () => void }) => ReactNode;
-  /** Shown in the top bar on narrow screens, next to the menu button. */
-  title?: ReactNode;
   children: ReactNode;
 }
 
-export function AppShell({ sidebar, title, children }: AppShellProps) {
+export function AppShell({ sidebar, children }: AppShellProps) {
   const narrow = useMediaQuery(NARROW_QUERY);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = () => {
@@ -36,7 +34,10 @@ export function AppShell({ sidebar, title, children }: AppShellProps) {
           <Dialog.Trigger className={styles.barButton} aria-label="Open projects">
             <IconMenu />
           </Dialog.Trigger>
-          <div className={styles.topTitle}>{title}</div>
+          <span className={styles.wordmark}>
+            <span className={styles.mark} aria-hidden="true" />
+            TaskForge
+          </span>
         </header>
         <Dialog.Portal>
           <Dialog.Overlay className={styles.overlay} />

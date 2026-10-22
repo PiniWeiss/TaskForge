@@ -1,6 +1,9 @@
 import { Link, useParams } from 'react-router';
 import { useProjects } from '../api/projects.ts';
 import { paths } from '../app/paths.ts';
+import { useColumnVisibility } from '../issues/columns.ts';
+import { useIssueViewState } from '../issues/useIssueViewState.ts';
+import { IssuesPane } from '../components/issues/IssuesPane.tsx';
 import { ProjectHeader } from '../components/projects/ProjectHeader.tsx';
 import { ErrorState } from '../components/ui/ErrorState.tsx';
 import styles from './ProjectView.module.css';
@@ -8,6 +11,8 @@ import styles from './ProjectView.module.css';
 export function ProjectView() {
   const { projectId = '' } = useParams();
   const projects = useProjects();
+  const [viewState, updateView] = useIssueViewState();
+  const [columnVisibility] = useColumnVisibility();
 
   if (projects.isPending) return null;
   if (projects.isError) {
@@ -36,6 +41,17 @@ export function ProjectView() {
   return (
     <div className={styles.view}>
       <ProjectHeader project={project} />
+      <IssuesPane
+        project={project}
+        state={viewState}
+        columnVisibility={columnVisibility}
+        onSortChange={(sort) => {
+          updateView({ sort });
+        }}
+        onClearFilters={() => {
+          updateView({ status: undefined, priority: undefined, q: '' });
+        }}
+      />
     </div>
   );
 }

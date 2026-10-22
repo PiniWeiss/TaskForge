@@ -1,0 +1,17 @@
+.tooltip {
+  z-index: var(--z-menu);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--radius-1);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  line-height: var(--leading-micro);
+  animation: tooltip-in var(--dur-1) var(--ease-out);
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+  }
+}

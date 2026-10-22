@@ -1,0 +1,31 @@
+.empty {
+  max-width: 60ch;
+  padding: var(--s-8) var(--s-6);
+}
+
+.title {
+  font-weight: var(--weight-regular);
+}
+
+.title strong {
+  font-weight: var(--weight-medium);
+}
+
+.hint {
+  margin-top: var(--s-1);
+  color: var(--ink-2);
+}
+
+.hint kbd {
+  vertical-align: 1px;
+}
+
+.action {
+  margin-top: var(--s-4);
+}
+
+@media (max-width: 767px) {
+  .empty {
+    padding: var(--s-6) var(--s-4);
+  }
+}
