@@ -4,6 +4,7 @@ import { paths } from '../app/paths.ts';
 import { useColumnVisibility } from '../issues/columns.ts';
 import { useIssueViewState } from '../issues/useIssueViewState.ts';
 import { IssuesPane } from '../components/issues/IssuesPane.tsx';
+import { IssueToolbar } from '../components/issues/IssueToolbar.tsx';
 import { ProjectHeader } from '../components/projects/ProjectHeader.tsx';
 import { ErrorState } from '../components/ui/ErrorState.tsx';
 import styles from './ProjectView.module.css';
@@ -12,7 +13,7 @@ export function ProjectView() {
   const { projectId = '' } = useParams();
   const projects = useProjects();
   const [viewState, updateView] = useIssueViewState();
-  const [columnVisibility] = useColumnVisibility();
+  const [columnVisibility, toggleColumn] = useColumnVisibility();
 
   if (projects.isPending) return null;
   if (projects.isError) {
@@ -41,6 +42,12 @@ export function ProjectView() {
   return (
     <div className={styles.view}>
       <ProjectHeader project={project} />
+      <IssueToolbar
+        state={viewState}
+        onChange={updateView}
+        columnVisibility={columnVisibility}
+        onToggleColumn={toggleColumn}
+      />
       <IssuesPane
         project={project}
         state={viewState}

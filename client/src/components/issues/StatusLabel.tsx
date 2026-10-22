@@ -21,11 +21,17 @@ export function StatusGlyph({ status }: { status: IssueStatus }) {
   );
 }
 
-export function StatusLabel({ status }: { status: IssueStatus }) {
+interface StatusLabelProps {
+  status: IssueStatus;
+  /** On narrow screens show only the glyph; the word stays available to screen readers. */
+  compactOnNarrow?: boolean;
+}
+
+export function StatusLabel({ status, compactOnNarrow = false }: StatusLabelProps) {
   return (
-    <span className={styles.label}>
+    <span className={styles.label} title={compactOnNarrow ? STATUS_LABELS[status] : undefined}>
       <StatusGlyph status={status} />
-      {STATUS_LABELS[status]}
+      <span className={clsx(compactOnNarrow && styles.narrowHidden)}>{STATUS_LABELS[status]}</span>
     </span>
   );
 }

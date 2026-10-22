@@ -53,7 +53,7 @@ function buildColumns(projectId: string, search: string) {
       id: 'status',
       header: 'Status',
       sortDescFirst: false,
-      cell: (info) => <StatusLabel status={info.getValue()} />,
+      cell: (info) => <StatusLabel status={info.getValue()} compactOnNarrow />,
       meta: { className: styles.colStatus } satisfies ColumnMeta,
     }),
     column.accessor('priority', {

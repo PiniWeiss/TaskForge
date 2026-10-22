@@ -150,11 +150,21 @@ th.colCreated {
   }
 
   .colNumber {
-    width: 64px;
+    width: 56px;
   }
 
   .colStatus {
-    width: 120px;
+    width: 44px;
+  }
+
+  /* "STATUS" doesn't fit a glyph-wide column; it stays for screen readers, the glyphs speak visually. */
+  th.colStatus .sortButton {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .table th:first-child,
