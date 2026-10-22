@@ -48,3 +48,48 @@
   font-size: var(--text-meta);
   font-weight: var(--weight-regular);
 }
+
+/* The actions button sits over the count and replaces it while the row is hovered or focused. */
+.more {
+  position: absolute;
+  top: 4px;
+  right: var(--s-2);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-1);
+  color: var(--ink-2);
+  opacity: 0;
+  transition:
+    opacity var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+.more:hover,
+.more[data-state='open'] {
+  background: var(--paper-hover);
+  color: var(--ink);
+}
+
+.item:hover .more,
+.item:focus-within .more,
+.more[data-state='open'] {
+  opacity: 1;
+}
+
+.item:hover .count,
+.item:focus-within .count,
+.item:has(.more[data-state='open']) .count {
+  visibility: hidden;
+}
+
+@media (hover: none) {
+  .more {
+    opacity: 1;
+  }
+
+  .count {
+    visibility: hidden;
+  }
+}

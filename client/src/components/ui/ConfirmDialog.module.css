@@ -1,0 +1,59 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--scrim);
+  animation: fade-in var(--dur-2) var(--ease-out);
+}
+
+.content {
+  position: fixed;
+  top: 20vh;
+  left: 50%;
+  z-index: var(--z-overlay);
+  width: min(420px, calc(100vw - var(--s-8)));
+  padding: var(--s-5) var(--s-6);
+  border: var(--hairline);
+  border-radius: var(--radius-2);
+  background: var(--paper);
+  transform: translateX(-50%);
+  animation: dialog-in var(--dur-2) var(--ease-out);
+}
+
+.title {
+  font-size: var(--text-title);
+  line-height: var(--leading-title);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.description {
+  margin-top: var(--s-2);
+  color: var(--ink-2);
+}
+
+.error {
+  margin-top: var(--s-3);
+  color: var(--signal);
+  font-size: var(--text-meta);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+}
