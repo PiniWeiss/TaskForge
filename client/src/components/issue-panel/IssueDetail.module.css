@@ -2,17 +2,9 @@
   padding: var(--s-5) var(--s-6) var(--s-10);
 }
 
-.title {
-  font-size: var(--text-title);
-  line-height: var(--leading-title);
-  font-weight: var(--weight-medium);
-  overflow-wrap: anywhere;
-  unicode-bidi: plaintext;
-}
-
 .properties {
   display: grid;
-  margin-top: var(--s-5);
+  margin-top: var(--s-4);
   border-top: var(--hairline);
 }
 
@@ -68,17 +60,11 @@
   text-transform: uppercase;
 }
 
-.description {
-  max-width: var(--measure-read);
-  font-size: var(--text-read);
-  line-height: var(--leading-read);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  unicode-bidi: plaintext;
-}
-
-.noDescription {
-  color: var(--ink-3);
+.fieldError {
+  padding-bottom: var(--s-2);
+  color: var(--signal);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
 }
 
 @media (max-width: 767px) {
