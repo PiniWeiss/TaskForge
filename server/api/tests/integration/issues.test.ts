@@ -256,6 +256,12 @@ describe('GET /projects/:projectId/issues', () => {
     expect(titles(res.body)).toEqual(['beta', 'בדיקה']);
   });
 
+  it('matches status and priority filters case-insensitively', async () => {
+    await seedIssues();
+    const res = await request(ctx.app).get(`${base}?status=OPEN&priority=High`).expect(200);
+    expect(titles(res.body)).toEqual(['beta']);
+  });
+
   it('filters by priority', async () => {
     await seedIssues();
     const res = await request(ctx.app).get(`${base}?priority=high`).expect(200);

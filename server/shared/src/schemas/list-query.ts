@@ -30,13 +30,18 @@ export function sortParam<const F extends string>(fields: readonly F[], defaultS
     });
 }
 
+/** Query filters match enum values case-insensitively (`?status=OPEN` == `?status=open`). */
+function caseInsensitive<T extends z.ZodType<unknown, string>>(schema: T) {
+  return z.string().toLowerCase().pipe(schema);
+}
+
 export const ISSUE_SORT_FIELDS = ['createdAt', 'priority', 'status', 'title'] as const;
 export type IssueSortField = (typeof ISSUE_SORT_FIELDS)[number];
 
 export const listIssuesQuerySchema = z.object({
   ...paginationShape,
   sort: sortParam(ISSUE_SORT_FIELDS, '-createdAt'),
-  status: issueStatusSchema.optional(),
-  priority: issuePrioritySchema.optional(),
+  status: caseInsensitive(issueStatusSchema).optional(),
+  priority: caseInsensitive(issuePrioritySchema).optional(),
 });
 export type ListIssuesQuery = z.output<typeof listIssuesQuerySchema>;

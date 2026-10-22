@@ -89,6 +89,14 @@ describe('listIssuesQuerySchema', () => {
     });
   });
 
+  it('matches status and priority filters case-insensitively', () => {
+    expect(listIssuesQuerySchema.parse({ status: 'IN_PROGRESS', priority: 'Low' })).toMatchObject({
+      status: 'in_progress',
+      priority: 'low',
+    });
+    expect(listIssuesQuerySchema.safeParse({ status: 'DONE' }).success).toBe(false);
+  });
+
   it('rejects out-of-range pagination and unknown sort fields', () => {
     expect(listIssuesQuerySchema.safeParse({ limit: '0' }).success).toBe(false);
     expect(listIssuesQuerySchema.safeParse({ limit: '101' }).success).toBe(false);
