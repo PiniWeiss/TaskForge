@@ -1,6 +1,6 @@
 import { Outlet, useParams } from 'react-router';
 import { useProjects } from '../api/projects.ts';
-import { ProjectList } from '../components/projects/ProjectList.tsx';
+import { ProjectsSection } from '../components/projects/ProjectsSection.tsx';
 import { AppShell } from '../components/shell/AppShell.tsx';
 import { Sidebar } from '../components/shell/Sidebar.tsx';
 
@@ -14,7 +14,7 @@ export function RootLayout() {
       title={current && <span dir="auto">{current.name}</span>}
       sidebar={({ onNavigate }) => (
         <Sidebar>
-          <ProjectList onNavigate={onNavigate} />
+          <ProjectsSection onNavigate={onNavigate} />
         </Sidebar>
       )}
     >

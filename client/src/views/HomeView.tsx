@@ -26,8 +26,8 @@ export function HomeView() {
     <div className={styles.home}>
       <h1 className={styles.title}>No projects yet</h1>
       <p className={styles.message}>
-        A project holds the issues for one codebase or team. Name your first one under Projects in
-        the sidebar, for example “Payments” or “Web app”.
+        A project holds the issues for one codebase or team. Name your first one in the sidebar, for
+        example “Payments” or “Web app”, and press Enter.
       </p>
     </div>
   );
