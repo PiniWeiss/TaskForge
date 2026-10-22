@@ -55,6 +55,9 @@ export function ProjectView() {
         onSortChange={(sort) => {
           updateView({ sort });
         }}
+        onPageChange={(page) => {
+          updateView({ page });
+        }}
         onClearFilters={() => {
           updateView({ status: undefined, priority: undefined, q: '' });
         }}

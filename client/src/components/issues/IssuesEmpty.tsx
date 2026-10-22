@@ -29,6 +29,9 @@ interface IssuesEmptyProps {
   state: IssueViewState;
   filtered: boolean;
   onClearFilters: () => void;
+  /** The URL asks for a page past the end of a non-empty list. */
+  beyondLastPage?: boolean;
+  onFirstPage?: () => void;
   /** Opens quick-add; without it the empty state only describes the situation. */
   onCreate?: () => void;
 }
@@ -39,7 +42,23 @@ export function IssuesEmpty({
   filtered,
   onClearFilters,
   onCreate,
+  beyondLastPage = false,
+  onFirstPage,
 }: IssuesEmptyProps) {
+  if (beyondLastPage) {
+    return (
+      <div className={styles.empty} role="status">
+        <p className={styles.title}>Page {state.page} is past the end of this list.</p>
+        <p className={styles.hint}>
+          Issues may have been closed or deleted since the link was made.
+        </p>
+        <Button className={styles.action} onClick={onFirstPage}>
+          Go to the first page
+        </Button>
+      </div>
+    );
+  }
+
   if (filtered) {
     return (
       <div className={styles.empty} role="status">
