@@ -14,6 +14,7 @@
     "dev:api": "node --watch --conditions=@taskforge/source server/api/src/server.ts",
     "dev:client": "npm run dev -w @taskforge/client",
     "start": "node server/api/dist/server.js",
+    "seed": "node --conditions=@taskforge/source server/api/src/seed/cli.ts",
     "build": "tsc -b && npm run build -w @taskforge/client",
     "clean": "tsc -b --clean",
     "typecheck": "tsc -b && tsc -p server/shared/tests && tsc -p server/storage/tests && tsc -p server/api/tests && tsc -p client",
