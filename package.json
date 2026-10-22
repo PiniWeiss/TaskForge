@@ -6,17 +6,21 @@
     "node": ">=24"
   },
   "workspaces": [
-    "server/*"
+    "server/*",
+    "client"
   ],
   "scripts": {
-    "dev": "node --watch --conditions=@taskforge/source server/api/src/server.ts",
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "node --watch --conditions=@taskforge/source server/api/src/server.ts",
+    "dev:client": "npm run dev -w @taskforge/client",
     "start": "node server/api/dist/server.js",
-    "build": "tsc -b",
+    "build": "tsc -b && npm run build -w @taskforge/client",
     "clean": "tsc -b --clean",
-    "typecheck": "tsc -b && tsc -p server/shared/tests && tsc -p server/storage/tests && tsc -p server/api/tests",
+    "typecheck": "tsc -b && tsc -p server/shared/tests && tsc -p server/storage/tests && tsc -p server/api/tests && tsc -p client",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "e2e": "npm run e2e -w @taskforge/client",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

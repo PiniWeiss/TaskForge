@@ -1,0 +1,8 @@
+.home {
+  padding: var(--s-10) var(--s-8);
+}
+
+.message {
+  max-width: var(--measure-read);
+  color: var(--ink-2);
+}

@@ -1,0 +1,23 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+
+.glyph {
+  width: 12px;
+  height: 12px;
+}
+
+.open {
+  color: var(--status-open);
+}
+
+.in_progress {
+  color: var(--status-progress);
+}
+
+.closed {
+  color: var(--status-closed);
+}
