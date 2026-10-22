@@ -18,6 +18,8 @@ interface IssuesPaneProps {
   onCreate?: () => void;
   columnVisibility: ColumnVisibility;
   selectedId?: string;
+  cursorId?: string;
+  onCursorChange?: (issueId: string) => void;
 }
 
 /** The scrolling table region: loading, error, empty, or the rows. */
@@ -30,6 +32,8 @@ export function IssuesPane({
   onCreate,
   columnVisibility,
   selectedId,
+  cursorId,
+  onCursorChange,
 }: IssuesPaneProps) {
   const issues = useIssues(project.id, toListParams(state));
 
@@ -82,6 +86,8 @@ export function IssuesPane({
         onSortChange={onSortChange}
         columnVisibility={columnVisibility}
         selectedId={selectedId}
+        cursorId={cursorId}
+        onCursorChange={onCursorChange}
         stale={issues.isPlaceholderData}
       />
     );

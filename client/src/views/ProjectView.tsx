@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import { useIssues } from '../api/issues.ts';
 import { useProjects } from '../api/projects.ts';
 import { paths } from '../app/paths.ts';
 import { IssuesPane } from '../components/issues/IssuesPane.tsx';
@@ -12,7 +13,9 @@ import { IconPlus } from '../components/ui/icons.tsx';
 import { Kbd } from '../components/ui/Kbd.tsx';
 import { useHotkeys } from '../hooks/useHotkeys.ts';
 import { useColumnVisibility } from '../issues/columns.ts';
+import { toListParams } from '../issues/list-params.ts';
 import { useIssueViewState } from '../issues/useIssueViewState.ts';
+import { useRowCursor } from '../issues/useRowCursor.ts';
 import type { ProjectOutletContext } from './IssueRoute.tsx';
 import styles from './ProjectView.module.css';
 
@@ -24,11 +27,57 @@ export function ProjectView() {
   const [viewState, updateView] = useIssueViewState();
   const [columnVisibility, toggleColumn] = useColumnVisibility();
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Same query as the table (deduplicated by React Query); the keyboard needs the row order.
+  const issues = useIssues(projectId, toListParams(viewState));
+  const rowIds = issues.data?.data.map((issue) => issue.id) ?? [];
+  const cursor = useRowCursor(rowIds, issueId);
 
   const openQuickAdd = () => {
     setQuickAddOpen(true);
   };
-  useHotkeys({ c: openQuickAdd }, !quickAddOpen);
+  const openIssue = (id: string, replace = false) => {
+    void navigate(paths.issue(projectId, id, search), { replace });
+  };
+  /** Moves the cursor and real focus to a row, so screen readers follow along. */
+  const focusRow = (id: string) => {
+    cursor.setCursorId(id);
+    requestAnimationFrame(() => {
+      const link = document.querySelector<HTMLElement>(`tr[data-issue-id="${id}"] a`);
+      link?.focus({ preventScroll: true });
+      link?.closest('tr')?.scrollIntoView({ block: 'nearest' });
+    });
+  };
+  const move = (delta: 1 | -1) => {
+    const next = cursor.step(delta);
+    if (!next) return;
+    // With the panel open, J/K page through issues in place instead of stacking history.
+    if (issueId) openIssue(next, true);
+    else focusRow(next);
+  };
+
+  useHotkeys({
+    c: () => {
+      if (!quickAddOpen) openQuickAdd();
+    },
+    j: () => {
+      move(1);
+    },
+    k: () => {
+      move(-1);
+    },
+    Enter: (event) => {
+      // A focused link or button already handles Enter itself.
+      if (event.target instanceof HTMLElement && event.target.closest('a, button')) return false;
+      if (!cursor.cursorId || issueId) return false;
+      openIssue(cursor.cursorId);
+      return undefined;
+    },
+    '/': () => {
+      searchRef.current?.focus();
+      searchRef.current?.select();
+    },
+  });
 
   if (projects.isPending) return null;
   if (projects.isError) {
@@ -57,7 +106,9 @@ export function ProjectView() {
   const outletContext: ProjectOutletContext = {
     project,
     closePanel: () => {
+      const closing = issueId;
       void navigate(paths.project(project.id, search));
+      if (closing) focusRow(closing);
     },
   };
 
@@ -77,6 +128,7 @@ export function ProjectView() {
           onChange={updateView}
           columnVisibility={columnVisibility}
           onToggleColumn={toggleColumn}
+          searchRef={searchRef}
         />
         {quickAddOpen && (
           <QuickAdd
@@ -94,6 +146,8 @@ export function ProjectView() {
           state={viewState}
           columnVisibility={columnVisibility}
           selectedId={issueId}
+          cursorId={cursor.cursorId}
+          onCursorChange={cursor.setCursorId}
           onCreate={openQuickAdd}
           onSortChange={(sort) => {
             updateView({ sort });

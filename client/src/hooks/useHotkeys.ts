@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-export type HotkeyMap = Partial<Record<string, (event: KeyboardEvent) => void>>;
+/** Return `false` from a handler to leave the key to the browser (it is then not prevented). */
+export type HotkeyMap = Partial<Record<string, (event: KeyboardEvent) => unknown>>;
 
 /** Typing in a field, or working inside a menu or dialog, owns the keyboard. */
 export function isTypingOrInOverlay(target: EventTarget | null): boolean {
@@ -30,8 +31,7 @@ export function useHotkeys(map: HotkeyMap, enabled = true): void {
       if (isTypingOrInOverlay(event.target)) return;
       const handler = latest.current[event.key] ?? latest.current[event.key.toLowerCase()];
       if (!handler) return;
-      event.preventDefault();
-      handler(event);
+      if (handler(event) !== false) event.preventDefault();
     }
     document.addEventListener('keydown', onKeyDown);
     return () => {

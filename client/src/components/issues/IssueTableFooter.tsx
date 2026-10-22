@@ -2,6 +2,7 @@ import type { IssueSortField } from '@taskforge/shared';
 import { ISSUE_PAGE_SIZE } from '../../api/endpoints.ts';
 import type { IssueViewState } from '../../issues/list-params.ts';
 import { Button } from '../ui/Button.tsx';
+import { Kbd } from '../ui/Kbd.tsx';
 import styles from './IssueTableFooter.module.css';
 
 const SORT_WORDS: Record<IssueSortField, { asc: string; desc: string }> = {
@@ -11,6 +12,13 @@ const SORT_WORDS: Record<IssueSortField, { asc: string; desc: string }> = {
   status: { asc: 'by status, open first', desc: 'by status, closed first' },
   title: { asc: 'by title, A–Z', desc: 'by title, Z–A' },
 };
+
+const HINTS = [
+  { keys: ['J', 'K'], action: 'move' },
+  { keys: ['Enter'], action: 'open' },
+  { keys: ['C'], action: 'new' },
+  { keys: ['?'], action: 'all keys' },
+] as const;
 
 interface IssueTableFooterProps {
   total: number;
@@ -33,6 +41,16 @@ export function IssueTableFooter({ total, shown, state, onPageChange }: IssueTab
       <p className={styles.summary} aria-live="polite">
         {range} {total === 1 ? 'issue' : 'issues'} · sorted{' '}
         {SORT_WORDS[state.sort.field][state.sort.dir]}
+      </p>
+      <p className={styles.hints} aria-hidden="true">
+        {HINTS.map(({ keys, action }) => (
+          <span key={action} className={styles.hint}>
+            {keys.map((key) => (
+              <Kbd key={key}>{key}</Kbd>
+            ))}
+            {action}
+          </span>
+        ))}
       </p>
       {pages > 1 && (
         <nav className={styles.pager} aria-label="Pages">

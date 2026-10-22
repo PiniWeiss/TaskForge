@@ -19,6 +19,21 @@
   white-space: nowrap;
 }
 
+.hints {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: var(--text-micro);
+}
+
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
 .pager {
   display: flex;
   align-items: center;
@@ -31,8 +46,14 @@
   font-family: var(--font-mono);
 }
 
+@container issues (max-width: 719px) {
+  .hints {
+    display: none;
+  }
+}
+
 @container issues (max-width: 559px) {
   .footer {
-    padding: var(--s-1) var(--s-4);
+    padding: 0 var(--s-4);
   }
 }

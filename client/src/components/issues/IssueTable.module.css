@@ -104,6 +104,11 @@
   outline-offset: 2px;
 }
 
+/* On the cursor row the signal edge already says "you are here". */
+.cursor .titleLink:focus-visible {
+  outline: none;
+}
+
 /* Columns */
 .colNumber {
   width: 88px;

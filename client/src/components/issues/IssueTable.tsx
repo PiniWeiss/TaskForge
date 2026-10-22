@@ -91,6 +91,8 @@ interface IssueTableProps {
   selectedId?: string;
   /** True while a new view is loading over the previous rows. */
   stale?: boolean;
+  /** Focus landing in a row (Tab, click) moves the keyboard cursor there. */
+  onCursorChange?: (issueId: string) => void;
 }
 
 export function IssueTable({
@@ -102,6 +104,7 @@ export function IssueTable({
   cursorId,
   selectedId,
   stale = false,
+  onCursorChange,
 }: IssueTableProps) {
   const { search } = useLocation();
   const navigate = useNavigate();
@@ -178,6 +181,9 @@ export function IssueTable({
             aria-current={row.id === selectedId ? 'true' : undefined}
             onClick={(event) => {
               openRow(event, row.id);
+            }}
+            onFocus={() => {
+              onCursorChange?.(row.id);
             }}
           >
             {row.getVisibleCells().map((cell) => (
