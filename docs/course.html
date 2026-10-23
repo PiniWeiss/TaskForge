@@ -1,0 +1,4369 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Building TaskForge</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+    />
+    <style>
+      /* Layout: an engineering logbook. Sticky lesson index on the inline-start side, one reading column,
+   numbered lessons in build order, a technology library of expandable cards, a command sheet. */
+      :root {
+        --paper: #f4f1e8;
+        --paper-2: #ece8dc;
+        --paper-3: #e4dfd1;
+        --paper-raised: #faf8f2;
+        --ink: #1d1b17;
+        --ink-2: #555048;
+        --ink-3: #655f55;
+        --rule: #d8d2c4;
+        --rule-strong: #8c8577;
+        --signal: #b5361a;
+        --signal-ink: #fbf8f1;
+        --signal-wash: #f3ded6;
+        --m1: #4e6672;
+        --m2: #7e5a18;
+        --m3: #55684f;
+        --m4: #6b4f6e;
+
+        --font-sans:
+          'IBM Plex Sans', 'IBM Plex Sans Hebrew', 'Segoe UI', system-ui, -apple-system, Arial,
+          sans-serif;
+        --font-he: 'IBM Plex Sans Hebrew', 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+        --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+        --t-micro: 0.6875rem;
+        --t-meta: 0.8125rem;
+        --t-small: 0.9375rem;
+        --t-body: 1.0625rem;
+        --t-lead: 1.25rem;
+        --t-h3: 1.375rem;
+        --t-h2: 1.875rem;
+        --t-h1: clamp(2.25rem, 5vw + 1rem, 3.75rem);
+
+        --gutter: 16px;
+        --radius-1: 2px;
+        --radius-2: 4px;
+        --dur: 160ms;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --paper: #1c1b18;
+          --paper-2: #232220;
+          --paper-3: #2c2a26;
+          --paper-raised: #1f1e1b;
+          --ink: #eae4d8;
+          --ink-2: #b4ad9f;
+          --ink-3: #9c9588;
+          --rule: #36332e;
+          --rule-strong: #6e685e;
+          --signal: #ee7455;
+          --signal-ink: #1c1b18;
+          --signal-wash: #3a2620;
+          --m1: #9aafb9;
+          --m2: #d1a65a;
+          --m3: #9bb094;
+          --m4: #c3a3c6;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme='dark'] {
+        --paper: #1c1b18;
+        --paper-2: #232220;
+        --paper-3: #2c2a26;
+        --paper-raised: #1f1e1b;
+        --ink: #eae4d8;
+        --ink-2: #b4ad9f;
+        --ink-3: #9c9588;
+        --rule: #36332e;
+        --rule-strong: #6e685e;
+        --signal: #ee7455;
+        --signal-ink: #1c1b18;
+        --signal-wash: #3a2620;
+        --m1: #9aafb9;
+        --m2: #d1a65a;
+        --m3: #9bb094;
+        --m4: #c3a3c6;
+        color-scheme: dark;
+      }
+
+      /* ---------- Language switching ---------- */
+      html[lang='he'] .en {
+        display: none !important;
+      }
+      html:not([lang='he']) .he {
+        display: none !important;
+      }
+      html[lang='he'] body {
+        font-family: var(--font-he);
+      }
+
+      /* ---------- Base ---------- */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 72px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        * {
+          transition: none !important;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-sans);
+        font-size: var(--t-body);
+        line-height: 1.65;
+        font-variant-numeric: tabular-nums;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0 0 auto;
+        height: env(safe-area-inset-top, 0px);
+        z-index: 10;
+        background: var(--paper);
+      }
+      ::selection {
+        background: var(--signal-wash);
+        color: var(--ink);
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        text-wrap: balance;
+        margin: 0;
+        line-height: 1.2;
+      }
+      p {
+        margin: 0;
+      }
+      a {
+        color: inherit;
+        text-decoration-color: var(--rule-strong);
+        text-underline-offset: 3px;
+      }
+      a:hover {
+        text-decoration-color: var(--signal);
+      }
+      :focus-visible {
+        outline: 2px solid var(--signal);
+        outline-offset: 2px;
+        border-radius: var(--radius-1);
+      }
+      code,
+      kbd,
+      pre {
+        font-family: var(--font-mono);
+      }
+      :not(pre) > code {
+        font-size: 0.86em;
+        background: var(--paper-2);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-1);
+        padding: 0.05em 0.35em;
+        direction: ltr;
+        unicode-bidi: isolate;
+        overflow-wrap: anywhere;
+      }
+      kbd {
+        font-size: var(--t-micro);
+        border: 1px solid var(--rule-strong);
+        border-bottom-width: 2px;
+        border-radius: var(--radius-1);
+        padding: 0.1em 0.45em;
+        background: var(--paper-raised);
+      }
+      .mono {
+        font-family: var(--font-mono);
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+      }
+      .gutter {
+        padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+        padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+      }
+
+      /* ---------- Top bar ---------- */
+      .topbar {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 20;
+        background: var(--paper);
+        border-bottom: 1px solid var(--rule);
+      }
+      .topbar-inner {
+        max-width: 1200px;
+        margin-inline: auto;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        min-width: 0;
+      }
+      .brand-mark {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        border: 1.5px solid var(--ink);
+        border-radius: var(--radius-1);
+        display: grid;
+        place-items: center;
+      }
+      .brand-mark::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: var(--signal);
+      }
+      .brand small {
+        font-weight: 400;
+        color: var(--ink-3);
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        white-space: nowrap;
+      }
+      .topbar .spacer {
+        flex: 1;
+      }
+      .progress-mini {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        color: var(--ink-2);
+      }
+      .progress-mini .bar {
+        width: 90px;
+        height: 4px;
+        background: var(--paper-3);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .progress-mini .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--signal);
+        transition: width var(--dur) var(--ease);
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-2);
+        overflow: hidden;
+      }
+      .seg button {
+        font: inherit;
+        font-size: var(--t-meta);
+        font-weight: 500;
+        background: transparent;
+        color: var(--ink-2);
+        border: 0;
+        padding: 4px 10px;
+        cursor: pointer;
+        min-height: 30px;
+      }
+      .seg button + button {
+        border-inline-start: 1px solid var(--rule-strong);
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        color: var(--ink-2);
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-2);
+        cursor: pointer;
+      }
+      .icon-btn:hover,
+      .seg button:hover:not([aria-pressed='true']) {
+        color: var(--ink);
+        background: var(--paper-2);
+      }
+      .icon-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.5;
+      }
+      @media (max-width: 560px) {
+        .progress-mini,
+        .brand small {
+          display: none;
+        }
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        border-bottom: 1px solid var(--rule);
+      }
+      .hero-inner {
+        max-width: 1200px;
+        margin-inline: auto;
+        padding-block: 56px 48px;
+        display: grid;
+        gap: 28px;
+      }
+      .hero h1 {
+        font-size: var(--t-h1);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        max-width: 16ch;
+      }
+      html[lang='he'] .hero h1 {
+        letter-spacing: 0;
+      }
+      .hero h1 em {
+        font-style: normal;
+        color: var(--signal);
+      }
+      .hero .lead {
+        font-size: var(--t-lead);
+        color: var(--ink-2);
+        max-width: 60ch;
+        line-height: 1.55;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-block: 1px solid var(--rule);
+        max-width: 760px;
+      }
+      .stat {
+        padding: 14px 16px;
+        display: grid;
+        gap: 2px;
+      }
+      .stat + .stat {
+        border-inline-start: 1px solid var(--rule);
+      }
+      .stat b {
+        font-family: var(--font-mono);
+        font-size: 1.75rem;
+        font-weight: 500;
+        line-height: 1.1;
+      }
+      .stat span {
+        font-size: var(--t-meta);
+        color: var(--ink-3);
+      }
+      @media (max-width: 560px) {
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .stat:nth-child(3) {
+          border-inline-start: 0;
+        }
+        .stat:nth-child(n + 3) {
+          border-top: 1px solid var(--rule);
+        }
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font: inherit;
+        font-size: var(--t-small);
+        font-weight: 500;
+        padding: 9px 16px;
+        border-radius: var(--radius-2);
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid var(--rule-strong);
+        background: transparent;
+        color: var(--ink);
+      }
+      .btn:hover {
+        background: var(--paper-2);
+      }
+      .btn-signal {
+        background: var(--signal);
+        color: var(--signal-ink);
+        border-color: var(--signal);
+      }
+      .btn-signal:hover {
+        background: var(--signal);
+        filter: brightness(1.08);
+      }
+
+      /* ---------- Page grid ---------- */
+      .page {
+        max-width: 1200px;
+        margin-inline: auto;
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 56px;
+        padding-block: 40px 80px;
+      }
+      @media (max-width: 960px) {
+        .page {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 32px;
+        }
+      }
+
+      /* ---------- Index (TOC) ---------- */
+      .toc {
+        position: sticky;
+        top: 80px;
+        align-self: start;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        font-size: var(--t-small);
+        padding-inline-end: 4px;
+      }
+      .toc details > summary {
+        list-style: none;
+        cursor: default;
+      }
+      .toc details > summary::-webkit-details-marker {
+        display: none;
+      }
+      .toc-group {
+        display: grid;
+        gap: 2px;
+        margin-bottom: 18px;
+      }
+      .toc-group .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .toc-group .eyebrow::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: var(--mc, var(--ink-3));
+      }
+      .toc a {
+        display: grid;
+        grid-template-columns: 26px minmax(0, 1fr) 14px;
+        gap: 6px;
+        align-items: baseline;
+        text-decoration: none;
+        color: var(--ink-2);
+        padding: 4px 8px;
+        border-radius: var(--radius-2);
+        border-inline-start: 2px solid transparent;
+      }
+      .toc a:hover {
+        background: var(--paper-2);
+        color: var(--ink);
+      }
+      .toc a.active {
+        color: var(--ink);
+        border-inline-start-color: var(--signal);
+        background: var(--paper-2);
+      }
+      .toc a .n {
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        color: var(--ink-3);
+      }
+      .toc a .ck {
+        color: var(--m3);
+        font-size: var(--t-meta);
+        visibility: hidden;
+      }
+      .toc a.done .ck {
+        visibility: visible;
+      }
+      @media (max-width: 960px) {
+        .toc {
+          position: static;
+          max-height: none;
+          border: 1px solid var(--rule);
+          border-radius: var(--radius-2);
+          padding: 12px 16px;
+          background: var(--paper-raised);
+        }
+        .toc details > summary {
+          cursor: pointer;
+          font-weight: 500;
+        }
+        .toc details:not([open]) > summary {
+          margin: 0;
+        }
+        .toc details[open] > summary {
+          margin-bottom: 14px;
+        }
+      }
+      .toc-title {
+        font-weight: 500;
+        color: var(--ink);
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      /* ---------- Main column ---------- */
+      main {
+        min-width: 0;
+        display: grid;
+        gap: 72px;
+      }
+      .section-head {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 28px;
+        max-width: 68ch;
+      }
+      .section-head h2 {
+        font-size: var(--t-h2);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .section-head p {
+        color: var(--ink-2);
+      }
+      .prose {
+        max-width: 68ch;
+        display: grid;
+        gap: 14px;
+      }
+      .prose-after {
+        margin-top: 20px;
+      }
+
+      /* Module bands */
+      .module {
+        display: grid;
+        gap: 0;
+      }
+      .module-head {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 4px 16px;
+        align-items: baseline;
+        padding-bottom: 18px;
+        border-bottom: 2px solid var(--ink);
+        margin-bottom: 8px;
+      }
+      .module-head .tag {
+        grid-row: span 2;
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        color: var(--paper);
+        background: var(--mc);
+        padding: 2px 8px;
+        border-radius: var(--radius-1);
+        align-self: start;
+        margin-top: 6px;
+      }
+      .module-head h2 {
+        font-size: var(--t-h2);
+        font-weight: 600;
+      }
+      .module-head p {
+        color: var(--ink-2);
+        max-width: 62ch;
+      }
+      .m1 {
+        --mc: var(--m1);
+      }
+      .m2 {
+        --mc: var(--m2);
+      }
+      .m3 {
+        --mc: var(--m3);
+      }
+      .m4 {
+        --mc: var(--m4);
+      }
+
+      /* Lessons */
+      .lesson {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 0 20px;
+        padding-block: 32px;
+        border-bottom: 1px solid var(--rule);
+      }
+      .lesson:last-child {
+        border-bottom: 0;
+      }
+      .lesson-no {
+        font-family: var(--font-mono);
+        font-size: 2rem;
+        font-weight: 500;
+        color: var(--rule-strong);
+        line-height: 1;
+        padding-top: 2px;
+      }
+      .lesson.is-done .lesson-no {
+        color: var(--m3);
+      }
+      .lesson-body {
+        min-width: 0;
+        display: grid;
+        gap: 16px;
+        max-width: 70ch;
+      }
+      .lesson h3 {
+        font-size: var(--t-h3);
+        font-weight: 600;
+      }
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        align-items: center;
+        font-size: var(--t-meta);
+        color: var(--ink-3);
+      }
+      .commits {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      .commits code {
+        font-size: var(--t-micro) !important;
+        color: var(--ink-2);
+      }
+      .chips {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        text-decoration: none;
+        color: var(--ink-2);
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-1);
+        padding: 1px 6px;
+        white-space: nowrap;
+      }
+      .chip:hover {
+        color: var(--signal);
+        border-color: var(--signal);
+      }
+      @media (max-width: 560px) {
+        .lesson {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px;
+        }
+        .lesson-no {
+          font-size: 1.25rem;
+        }
+      }
+
+      .built {
+        border-inline-start: 2px solid var(--mc, var(--rule-strong));
+        padding-inline-start: 16px;
+        display: grid;
+        gap: 6px;
+      }
+      .built h4,
+      .key h4 {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        font-weight: 500;
+      }
+      .built ul {
+        margin: 0;
+        padding-inline-start: 18px;
+        display: grid;
+        gap: 4px;
+        font-size: var(--t-small);
+      }
+      .key {
+        background: var(--paper-2);
+        padding: 12px 16px;
+        border-radius: var(--radius-2);
+        display: grid;
+        gap: 4px;
+        font-size: var(--t-small);
+      }
+      .key h4 {
+        color: var(--signal);
+      }
+
+      pre.code {
+        margin: 0;
+        background: var(--paper-raised);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 0.8125rem;
+        line-height: 1.6;
+        direction: ltr;
+        text-align: left;
+        position: relative;
+      }
+      pre.code .file {
+        display: block;
+        font-size: var(--t-micro);
+        color: var(--ink-3);
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed var(--rule);
+      }
+      pre.code .c {
+        color: var(--ink-3);
+        font-style: italic;
+      }
+      pre.code .k {
+        color: var(--signal);
+      }
+      pre.code .s {
+        color: var(--m3);
+      }
+
+      /* Expandable "learn more" */
+      details.more {
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+        background: var(--paper-raised);
+      }
+      details.more > summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 10px 14px;
+        font-size: var(--t-small);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+      }
+      details.more > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.more > summary::before {
+        content: '+';
+        font-family: var(--font-mono);
+        width: 18px;
+        height: 18px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-1);
+        font-size: 13px;
+        line-height: 1;
+        flex: none;
+      }
+      details.more[open] > summary::before {
+        content: '\2212';
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      details.more > summary:hover {
+        background: var(--paper-2);
+      }
+      details.more .more-body {
+        padding: 4px 16px 16px;
+        display: grid;
+        gap: 12px;
+        font-size: var(--t-small);
+        color: var(--ink-2);
+      }
+      details.more .more-body ul {
+        margin: 0;
+        padding-inline-start: 18px;
+        display: grid;
+        gap: 4px;
+      }
+      details.more .more-body strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+
+      .done-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: var(--t-small);
+        color: var(--ink-2);
+        cursor: pointer;
+        justify-self: start;
+        padding: 6px 12px 6px 10px;
+        border: 1px dashed var(--rule-strong);
+        border-radius: var(--radius-2);
+      }
+      .done-toggle input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--m3);
+        margin: 0;
+      }
+      .done-toggle:has(input:checked) {
+        border-style: solid;
+        border-color: var(--m3);
+        color: var(--ink);
+      }
+
+      /* Architecture diagram */
+      .arch {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 180px;
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .arch-stack {
+        display: grid;
+        gap: 0;
+      }
+      .layer {
+        border: 1px solid var(--rule-strong);
+        background: var(--paper-raised);
+        padding: 12px 16px;
+        border-radius: var(--radius-2);
+        display: grid;
+        gap: 2px;
+      }
+      .layer b {
+        font-weight: 600;
+      }
+      .layer .mono {
+        font-size: var(--t-meta);
+        color: var(--ink-3);
+      }
+      .layer.accent {
+        border-color: var(--signal);
+      }
+      .arrow {
+        height: 26px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-inline-start: 24px;
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        color: var(--ink-3);
+      }
+      .arrow::before {
+        content: '';
+        width: 1px;
+        height: 100%;
+        background: var(--rule-strong);
+      }
+      .side {
+        border: 1px dashed var(--m1);
+        border-radius: var(--radius-2);
+        padding: 12px 14px;
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        font-size: var(--t-meta);
+        color: var(--ink-2);
+      }
+      .side b {
+        color: var(--ink);
+        font-size: var(--t-small);
+      }
+      @media (max-width: 640px) {
+        .arch {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      /* Technology library */
+      .lib-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .filters button {
+        font: inherit;
+        font-size: var(--t-meta);
+        background: transparent;
+        color: var(--ink-2);
+        cursor: pointer;
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-2);
+        padding: 4px 10px;
+      }
+      .filters button[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 720px) {
+        .tech-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .tech {
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+        background: var(--paper-raised);
+        padding: 16px;
+        display: grid;
+        gap: 10px;
+        scroll-margin-top: 80px;
+      }
+      .tech:target {
+        border-color: var(--signal);
+      }
+      .tech-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: baseline;
+        flex-wrap: wrap;
+      }
+      .tech-head h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+      }
+      .ver {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        color: var(--ink-3);
+        direction: ltr;
+        unicode-bidi: isolate;
+      }
+      .cat {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--mc);
+      }
+      .tech .short {
+        font-size: var(--t-small);
+      }
+      .tech .where {
+        font-size: var(--t-meta);
+        color: var(--ink-2);
+        border-top: 1px dashed var(--rule);
+        padding-top: 8px;
+      }
+      .tech .where b {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .tech details.more {
+        background: var(--paper);
+      }
+      .c-run {
+        --mc: var(--m1);
+      }
+      .c-back {
+        --mc: var(--m2);
+      }
+      .c-front {
+        --mc: var(--m3);
+      }
+      .c-test {
+        --mc: var(--signal);
+      }
+      .c-tool {
+        --mc: var(--m4);
+      }
+
+      /* Commands table */
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: var(--t-small);
+      }
+      th,
+      td {
+        text-align: start;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        font-weight: 500;
+        background: var(--paper-2);
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td code {
+        white-space: nowrap;
+      }
+
+      /* Glossary */
+      .gloss {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 32px;
+        margin: 0;
+      }
+      .gloss div {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--rule);
+        display: grid;
+        gap: 2px;
+      }
+      .gloss dt {
+        font-weight: 600;
+      }
+      .gloss dd {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: var(--t-small);
+      }
+      @media (max-width: 640px) {
+        .gloss {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      footer.foot {
+        border-top: 1px solid var(--rule);
+      }
+      footer.foot .inner {
+        max-width: 1200px;
+        margin-inline: auto;
+        padding-block: 28px 40px;
+        color: var(--ink-3);
+        font-size: var(--t-meta);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 24px;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar gutter">
+      <div class="topbar-inner">
+        <a class="brand" href="#top"
+          ><span class="brand-mark" aria-hidden="true"></span><span>TaskForge</span
+          ><small class="en">course</small><small class="he">קורס</small></a
+        >
+        <span class="spacer"></span>
+        <div class="progress-mini" aria-live="polite">
+          <span class="bar" aria-hidden="true"><i id="mini-bar"></i></span>
+          <span id="mini-count">0/18</span>
+        </div>
+        <div class="seg" role="group" aria-label="Language / שפה">
+          <button type="button" id="lang-en" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" id="lang-he" data-lang="he" aria-pressed="false">עברית</button>
+        </div>
+        <button type="button" class="icon-btn" id="theme-btn" aria-label="Toggle dark mode">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7Z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero gutter" id="top">
+      <div class="hero-inner">
+        <p class="eyebrow">
+          <span class="en">A hands-on course · from empty folder to merged pull request</span
+          ><span class="he">קורס מעשי · מתיקייה ריקה ועד Pull Request ממוזג</span>
+        </p>
+        <h1>
+          <span class="en">Build a real issue tracker, <em>step by step</em></span
+          ><span class="he">בונים מערכת לניהול משימות, <em>צעד אחר צעד</em></span>
+        </h1>
+        <p class="lead en">
+          TaskForge is a small but complete web app. It has a REST API in Node.js and a React web
+          interface, and it supports Hebrew and English. This course goes through every step we took
+          to build it, in the same order, and explains each technology in plain words.
+        </p>
+        <p class="lead he">
+          TaskForge היא אפליקציית ווב קטנה אבל שלמה: שרת REST ב-Node.js, ממשק משתמש ב-React, ותמיכה
+          מלאה בעברית ובאנגלית. הקורס עובר על כל צעד שעשינו כדי לבנות אותה, באותו סדר, ומסביר כל
+          טכנולוגיה במילים פשוטות.
+        </p>
+        <div class="stats">
+          <div class="stat">
+            <b>18</b><span class="en">lessons</span><span class="he">שיעורים</span>
+          </div>
+          <div class="stat">
+            <b>4</b><span class="en">modules</span><span class="he">פרקים</span>
+          </div>
+          <div class="stat">
+            <b>36</b><span class="en">git commits</span><span class="he">קומיטים ב-git</span>
+          </div>
+          <div class="stat">
+            <b>26</b><span class="en">technologies</span><span class="he">טכנולוגיות</span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-signal" href="#overview"
+            ><span class="en">Start the course</span><span class="he">התחל את הקורס</span></a
+          >
+          <a class="btn" href="#library"
+            ><span class="en">Browse the technologies</span
+            ><span class="he">לספריית הטכנולוגיות</span></a
+          >
+        </div>
+      </div>
+    </section>
+
+    <div class="page gutter">
+      <!-- ===================== INDEX ===================== -->
+      <nav class="toc" aria-label="Course index">
+        <details id="toc-details" open>
+          <summary class="toc-title">
+            <span class="en">Course index</span><span class="he">תוכן הקורס</span>
+          </summary>
+          <div class="toc-group">
+            <span class="eyebrow"
+              ><span class="en">Start here</span><span class="he">מתחילים כאן</span></span
+            >
+            <a href="#overview"
+              ><span class="n">00</span
+              ><span
+                ><span class="en">The big picture</span><span class="he">התמונה הגדולה</span></span
+              ><span></span
+            ></a>
+          </div>
+          <div class="toc-group m1">
+            <span class="eyebrow"
+              ><span class="en">Module 1 · Foundations</span
+              ><span class="he">פרק 1 · יסודות</span></span
+            >
+            <a href="#l1" data-lesson="l1"
+              ><span class="n">01</span
+              ><span
+                ><span class="en">Plan before code</span
+                ><span class="he">תוכנית לפני קוד</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l2" data-lesson="l2"
+              ><span class="n">02</span
+              ><span
+                ><span class="en">Set up the monorepo</span
+                ><span class="he">הקמת ה-monorepo</span></span
+              ><span class="ck">✓</span></a
+            >
+          </div>
+          <div class="toc-group m2">
+            <span class="eyebrow"
+              ><span class="en">Module 2 · The API</span><span class="he">פרק 2 · השרת</span></span
+            >
+            <a href="#l3" data-lesson="l3"
+              ><span class="n">03</span
+              ><span
+                ><span class="en">Shared types and rules</span
+                ><span class="he">טיפוסים וחוקים משותפים</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l4" data-lesson="l4"
+              ><span class="n">04</span
+              ><span
+                ><span class="en">Hebrew and two languages</span
+                ><span class="he">עברית ושתי שפות</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l5" data-lesson="l5"
+              ><span class="n">05</span
+              ><span
+                ><span class="en">Storage behind interfaces</span
+                ><span class="he">אחסון מאחורי ממשקים</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l6" data-lesson="l6"
+              ><span class="n">06</span
+              ><span
+                ><span class="en">Errors and middleware</span
+                ><span class="he">שגיאות ו-middleware</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l7" data-lesson="l7"
+              ><span class="n">07</span
+              ><span><span class="en">The endpoints</span><span class="he">נקודות הקצה</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l8" data-lesson="l8"
+              ><span class="n">08</span
+              ><span
+                ><span class="en">Saving to a JSON file</span
+                ><span class="he">שמירה לקובץ JSON</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l9" data-lesson="l9"
+              ><span class="n">09</span
+              ><span
+                ><span class="en">Config, server, demo data</span
+                ><span class="he">הגדרות, שרת ונתוני דמו</span></span
+              ><span class="ck">✓</span></a
+            >
+          </div>
+          <div class="toc-group m3">
+            <span class="eyebrow"
+              ><span class="en">Module 3 · The web UI</span
+              ><span class="he">פרק 3 · ממשק המשתמש</span></span
+            >
+            <a href="#l10" data-lesson="l10"
+              ><span class="n">10</span
+              ><span
+                ><span class="en">Design tokens and shell</span
+                ><span class="he">טוקנים של עיצוב ומעטפת</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l11" data-lesson="l11"
+              ><span class="n">11</span
+              ><span
+                ><span class="en">Talking to the API</span
+                ><span class="he">מדברים עם השרת</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l12" data-lesson="l12"
+              ><span class="n">12</span
+              ><span
+                ><span class="en">The projects sidebar</span
+                ><span class="he">סרגל הפרויקטים</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l13" data-lesson="l13"
+              ><span class="n">13</span
+              ><span
+                ><span class="en">The issues table</span><span class="he">טבלת הסוגיות</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l14" data-lesson="l14"
+              ><span class="n">14</span
+              ><span
+                ><span class="en">Editing with optimistic saves</span
+                ><span class="he">עריכה עם שמירה אופטימית</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l15" data-lesson="l15"
+              ><span class="n">15</span
+              ><span
+                ><span class="en">Keyboard first</span><span class="he">קודם כל מקלדת</span></span
+              ><span class="ck">✓</span></a
+            >
+          </div>
+          <div class="toc-group m4">
+            <span class="eyebrow"
+              ><span class="en">Module 4 · Quality and shipping</span
+              ><span class="he">פרק 4 · איכות ומסירה</span></span
+            >
+            <a href="#l16" data-lesson="l16"
+              ><span class="n">16</span
+              ><span
+                ><span class="en">Fix what you find</span
+                ><span class="he">מתקנים את מה שמוצאים</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l17" data-lesson="l17"
+              ><span class="n">17</span
+              ><span
+                ><span class="en">End-to-end tests</span
+                ><span class="he">בדיקות קצה לקצה</span></span
+              ><span class="ck">✓</span></a
+            >
+            <a href="#l18" data-lesson="l18"
+              ><span class="n">18</span
+              ><span
+                ><span class="en">Document and merge</span
+                ><span class="he">תיעוד ומיזוג</span></span
+              ><span class="ck">✓</span></a
+            >
+          </div>
+          <div class="toc-group">
+            <span class="eyebrow"
+              ><span class="en">Reference</span><span class="he">חומר עזר</span></span
+            >
+            <a href="#library"
+              ><span class="n">→</span
+              ><span
+                ><span class="en">Technology library</span
+                ><span class="he">ספריית הטכנולוגיות</span></span
+              ><span></span
+            ></a>
+            <a href="#commands"
+              ><span class="n">→</span
+              ><span><span class="en">Command sheet</span><span class="he">דף פקודות</span></span
+              ><span></span
+            ></a>
+            <a href="#glossary"
+              ><span class="n">→</span
+              ><span><span class="en">Glossary</span><span class="he">מילון מונחים</span></span
+              ><span></span
+            ></a>
+          </div>
+        </details>
+      </nav>
+
+      <main>
+        <!-- ===================== OVERVIEW ===================== -->
+        <section id="overview">
+          <div class="section-head">
+            <span class="eyebrow"
+              >00 · <span class="en">Start here</span><span class="he">מתחילים כאן</span></span
+            >
+            <h2><span class="en">The big picture</span><span class="he">התמונה הגדולה</span></h2>
+          </div>
+          <div class="prose">
+            <p class="en">
+              TaskForge lets you create <strong>projects</strong>, and inside each project you track
+              <strong>issues</strong>: tasks or bugs, each with a title, a status (open, in
+              progress, closed) and a priority (low, medium, high). It is like a very small Jira or
+              Linear.
+            </p>
+            <p class="he">
+              ב-TaskForge יוצרים <strong>פרויקטים</strong>, ובתוך כל פרויקט עוקבים אחרי
+              <strong>סוגיות (issues)</strong>: משימות או באגים. לכל סוגיה יש כותרת, סטטוס (פתוחה,
+              בעבודה, סגורה) ועדיפות (נמוכה, בינונית, גבוהה). זה כמו Jira או Linear, רק בגרסה קטנה.
+            </p>
+            <p class="en">
+              The app has two halves. The <strong>server</strong> stores the data and answers
+              requests. The <strong>client</strong> is the web page you click on. Here is how a
+              request travels when you open a project:
+            </p>
+            <p class="he">
+              לאפליקציה יש שני חצאים. <strong>השרת</strong> שומר את המידע ועונה לבקשות.
+              <strong>הלקוח</strong> הוא דף הווב שבו לוחצים. כך עוברת בקשה כשפותחים פרויקט:
+            </p>
+          </div>
+
+          <div
+            class="arch"
+            role="img"
+            aria-label="Architecture: browser, Vite proxy, Express API, services, repositories, JSON file; shared package used by all"
+          >
+            <div class="arch-stack">
+              <div class="layer">
+                <b
+                  ><span class="en">Browser: React app</span
+                  ><span class="he">דפדפן: אפליקציית React</span></b
+                ><span class="mono">client/ · localhost:5173</span>
+              </div>
+              <div class="arrow">GET /api/projects/…/issues</div>
+              <div class="layer">
+                <b
+                  ><span class="en">Vite dev server (proxy)</span
+                  ><span class="he">שרת הפיתוח של Vite (פרוקסי)</span></b
+                ><span class="mono"
+                  ><span class="en">removes /api and forwards</span
+                  ><span class="he">מוריד את ‎/api ומעביר הלאה</span></span
+                >
+              </div>
+              <div class="arrow">GET /projects/…/issues</div>
+              <div class="layer accent">
+                <b
+                  ><span class="en">Express API: middleware → routes → services</span
+                  ><span class="he">שרת Express: ‏middleware ← routes ← services</span></b
+                ><span class="mono">server/api · localhost:3000</span>
+              </div>
+              <div class="arrow">
+                <span class="en">repository interface</span><span class="he">ממשק repository</span>
+              </div>
+              <div class="layer">
+                <b
+                  ><span class="en">Storage: repositories</span
+                  ><span class="he">אחסון: repositories</span></b
+                ><span class="mono">server/storage</span>
+              </div>
+              <div class="arrow">
+                <span class="en">atomic write</span><span class="he">כתיבה אטומית</span>
+              </div>
+              <div class="layer">
+                <b
+                  ><span class="en">JSON data file on disk</span
+                  ><span class="he">קובץ נתונים JSON בדיסק</span></b
+                ><span class="mono">server/api/data/taskforge.json</span>
+              </div>
+            </div>
+            <div class="side">
+              <b>@taskforge/shared</b>
+              <span class="en"
+                >Types, validation rules, error codes and the Hebrew/English messages. Every layer
+                imports it, so the client and server always agree.</span
+              >
+              <span class="he"
+                >טיפוסים, חוקי ולידציה, קודי שגיאה והודעות בעברית ובאנגלית. כל השכבות מייבאות אותו,
+                כך שהלקוח והשרת תמיד מסכימים.</span
+              >
+            </div>
+          </div>
+
+          <div class="prose prose-after">
+            <details class="more">
+              <summary>
+                <span class="en">How to use this course</span
+                ><span class="he">איך להשתמש בקורס</span>
+              </summary>
+              <div class="more-body">
+                <ul class="en">
+                  <li>
+                    Lessons follow the real build order from the git history. Each one lists the
+                    <strong>commits</strong> it covers, so you can open them with
+                    <code>git show &lt;hash&gt;</code>.
+                  </li>
+                  <li>
+                    Small chips under each lesson link to the <strong>technology library</strong>,
+                    where every tool has a short explanation and an expandable deep dive.
+                  </li>
+                  <li>
+                    Tick <strong>Mark lesson as done</strong> to track your progress. It is saved in
+                    this browser only.
+                  </li>
+                  <li>Switch between English and Hebrew at any time with the button at the top.</li>
+                </ul>
+                <ul class="he">
+                  <li>
+                    השיעורים מסודרים לפי סדר הבנייה האמיתי מתוך היסטוריית ה-git. כל שיעור מציין את
+                    <strong>הקומיטים</strong> שהוא מכסה, ואפשר לפתוח אותם עם
+                    <code>git show &lt;hash&gt;</code>.
+                  </li>
+                  <li>
+                    התגיות הקטנות בכל שיעור מקשרות ל<strong>ספריית הטכנולוגיות</strong>, שבה לכל כלי
+                    יש הסבר קצר והרחבה שנפתחת בלחיצה.
+                  </li>
+                  <li>
+                    סמנו <strong>סיימתי את השיעור</strong> כדי לעקוב אחרי ההתקדמות. זה נשמר רק
+                    בדפדפן הזה.
+                  </li>
+                  <li>אפשר לעבור בין אנגלית לעברית בכל רגע בכפתור למעלה.</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <!-- ===================== MODULE 1 ===================== -->
+        <section class="module m1" id="module-1">
+          <div class="module-head">
+            <span class="tag">M1</span>
+            <h2><span class="en">Foundations</span><span class="he">יסודות</span></h2>
+            <p>
+              <span class="en">Decide what to build, then prepare the workshop.</span
+              ><span class="he">מחליטים מה בונים, ואז מכינים את סדנת העבודה.</span>
+            </p>
+          </div>
+
+          <article class="lesson" id="l1">
+            <span class="lesson-no">01</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Plan before code</span><span class="he">תוכנית לפני קוד</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>a960608</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-rest">REST</a
+                  ><a class="chip" href="#t-git">Git</a></span
+                >
+              </div>
+              <p class="en">
+                Before writing a single line of code, we wrote <code>PLAN.md</code>, a short
+                document that records every important decision. What happens when you delete a
+                project? (Its issues are deleted too.) What kind of IDs do we use? (Random UUIDs.)
+                Can an issue move to another project? (No.) Answering these questions first means we
+                don't have to rewrite code later.
+              </p>
+              <p class="he">
+                לפני שכתבנו שורת קוד אחת, כתבנו את <code>PLAN.md</code>: מסמך קצר שמתעד כל החלטה
+                חשובה. מה קורה כשמוחקים פרויקט? (גם הסוגיות שלו נמחקות.) באיזה סוג מזהים משתמשים?
+                (UUID אקראי.) האם אפשר להעביר סוגיה לפרויקט אחר? (לא.) כשעונים על השאלות האלה מראש,
+                לא צריך לשכתב קוד אחר כך.
+              </p>
+              <div class="built">
+                <h4><span class="en">What we built</span><span class="he">מה בנינו</span></h4>
+                <ul class="en">
+                  <li>
+                    A decisions table covering IDs, updates, cascade delete, unique names and Hebrew
+                    support
+                  </li>
+                  <li>The full list of 12 endpoints and the 4 error codes</li>
+                  <li>A testing strategy and a build order, which this course follows</li>
+                </ul>
+                <ul class="he">
+                  <li>טבלת החלטות: מזהים, עדכונים, מחיקה מדורגת, שמות ייחודיים ותמיכה בעברית</li>
+                  <li>הרשימה המלאה של 12 נקודות הקצה ו-4 קודי השגיאה</li>
+                  <li>אסטרטגיית בדיקות וסדר בנייה, שהקורס הזה הולך לפיו</li>
+                </ul>
+              </div>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  A plan is cheap to change. Code is expensive to change. Make the hard decisions on
+                  paper.
+                </p>
+                <p class="he">קל לשנות תוכנית. יקר לשנות קוד. את ההחלטות הקשות מקבלים על הנייר.</p>
+              </div>
+              <details class="more">
+                <summary>
+                  <span class="en">Go deeper: PUT vs PATCH</span
+                  ><span class="he">להרחבה: PUT מול PATCH</span>
+                </summary>
+                <div class="more-body">
+                  <p class="en">
+                    One decision in the plan was to support both kinds of update.
+                    <strong>PATCH</strong> changes only the fields you send.
+                    <strong>PUT</strong> replaces the whole object, so any optional field you leave
+                    out is cleared. Writing this down early meant both the code and the tests had
+                    one clear rule to follow.
+                  </p>
+                  <p class="he">
+                    אחת ההחלטות בתוכנית הייתה לתמוך בשני סוגי עדכון. <strong>PATCH</strong> משנה רק
+                    את השדות ששולחים. <strong>PUT</strong> מחליף את כל האובייקט, כך שכל שדה
+                    אופציונלי שלא נשלח נמחק. כשזה כתוב מראש, גם לקוד וגם לבדיקות יש חוק אחד וברור.
+                  </p>
+                </div>
+              </details>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l1" data-lesson="l1" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l2">
+            <span class="lesson-no">02</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Set up the monorepo</span><span class="he">הקמת ה-monorepo</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>02656a8</code><code>b138034</code><code>4eaff5f</code
+                  ><code>370a1ed</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-workspaces">npm workspaces</a
+                  ><a class="chip" href="#t-ts">TypeScript</a
+                  ><a class="chip" href="#t-eslint">ESLint</a
+                  ><a class="chip" href="#t-prettier">Prettier</a
+                  ><a class="chip" href="#t-vitest">Vitest</a
+                  ><a class="chip" href="#t-claude">CLAUDE.md</a></span
+                >
+              </div>
+              <p class="en">
+                A <strong>monorepo</strong> is one repository that holds several packages. TaskForge
+                has three server packages: <code>shared</code>, <code>storage</code> and
+                <code>api</code>. The UI joined them later as <code>client</code>.
+                <strong>npm workspaces</strong> links the packages, so <code>api</code> can import
+                <code>@taskforge/shared</code> by name, as if it came from npm.
+              </p>
+              <p class="he">
+                <strong>Monorepo</strong> הוא ריפוזיטורי אחד שמחזיק כמה חבילות. ל-TaskForge יש שלוש
+                חבילות שרת: <code>shared</code>, <code>storage</code> ו-<code>api</code>. ממשק
+                המשתמש הצטרף אחר כך בתור <code>client</code>. <strong>npm workspaces</strong> מקשר
+                בין החבילות, כך ש-<code>api</code> יכול לייבא את <code>@taskforge/shared</code> לפי
+                שם, כאילו הגיע מ-npm.
+              </p>
+              <p class="en">
+                We also set the house rules on day one: strict TypeScript, ESLint and Prettier for
+                clean code, Vitest for tests, and <code>CLAUDE.md</code>, a file that tells every
+                developer (human or AI) how to work in this repo.
+              </p>
+              <p class="he">
+                ביום הראשון קבענו גם את חוקי הבית: TypeScript במצב strict, ‏ESLint ו-Prettier לקוד
+                נקי, Vitest לבדיקות, ו-<code>CLAUDE.md</code>, קובץ שמסביר לכל מפתח (אדם או AI) איך
+                עובדים בפרויקט.
+              </p>
+              <pre class="code"><span class="file">package.json</span>{
+  <span class="s">"type"</span>: <span class="s">"module"</span>,
+  <span class="s">"workspaces"</span>: [<span class="s">"server/*"</span>, <span class="s">"client"</span>],
+  <span class="s">"scripts"</span>: {
+    <span class="s">"test"</span>: <span class="s">"vitest run"</span>,
+    <span class="s">"typecheck"</span>: <span class="s">"tsc -b &amp;&amp; …"</span>,
+    <span class="s">"lint"</span>: <span class="s">"eslint ."</span>
+  }
+}</pre>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  Dependencies point one way: <code>api → storage → shared</code>. Lower layers
+                  never import upper ones, so each layer can be tested alone.
+                </p>
+                <p class="he">
+                  התלויות הולכות בכיוון אחד: <code>api → storage → shared</code>. שכבה נמוכה אף פעם
+                  לא מייבאת שכבה גבוהה ממנה, ולכן אפשר לבדוק כל שכבה לבד.
+                </p>
+              </div>
+              <details class="more">
+                <summary>
+                  <span class="en">Go deeper: why pin exact versions?</span
+                  ><span class="he">להרחבה: למה לנעול גרסאות מדויקות?</span>
+                </summary>
+                <div class="more-body">
+                  <p class="en">
+                    Every dependency is pinned to an exact version, like
+                    <code>"express": "5.3.0"</code>, with no <code>^</code>. Everyone who installs
+                    the project gets the same code, so a bug can't appear just because a library
+                    released a new version overnight. Upgrades happen on purpose, one at a time.
+                  </p>
+                  <p class="he">
+                    כל תלות נעולה לגרסה מדויקת, למשל <code>"express": "5.3.0"</code>, בלי
+                    <code>^</code>. כל מי שמתקין את הפרויקט מקבל בדיוק אותו קוד, כך שבאג לא יופיע רק
+                    כי ספרייה שחררה גרסה חדשה בלילה. שדרוגים קורים בכוונה, אחד בכל פעם.
+                  </p>
+                  <p class="en">
+                    Two small fix commits followed: one stopped Vitest from forcing an import
+                    condition on its workers, and one allowed a lint pattern (<code
+                      >const { id, ...rest } = obj</code
+                    >) used to drop fields. Setup work always needs a little tuning.
+                  </p>
+                  <p class="he">
+                    אחרי זה הגיעו שני קומיטים קטנים של תיקון: אחד מנע מ-Vitest לכפות תנאי ייבוא על
+                    התהליכים שלו, ואחד אישר תבנית lint ‏(<code>const { id, ...rest } = obj</code>)
+                    שמשמשת להשמטת שדות. הקמה תמיד צריכה קצת כיוונון.
+                  </p>
+                </div>
+              </details>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l2" data-lesson="l2" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+        </section>
+
+        <!-- ===================== MODULE 2 ===================== -->
+        <section class="module m2" id="module-2">
+          <div class="module-head">
+            <span class="tag">M2</span>
+            <h2><span class="en">The API (backend)</span><span class="he">השרת (Backend)</span></h2>
+            <p>
+              <span class="en"
+                >Build the server from the bottom up: rules, storage, errors, endpoints.</span
+              ><span class="he">בונים את השרת מלמטה למעלה: חוקים, אחסון, שגיאות, נקודות קצה.</span>
+            </p>
+          </div>
+
+          <article class="lesson" id="l3">
+            <span class="lesson-no">03</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Shared types and validation rules</span
+                ><span class="he">טיפוסים וחוקי ולידציה משותפים</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>91aead4</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-ts">TypeScript</a
+                  ><a class="chip" href="#t-zod">zod</a></span
+                >
+              </div>
+              <p class="en">
+                The <code>shared</code> package describes the world of TaskForge.
+                <strong>Types</strong> say what a Project and an Issue look like.
+                <strong>zod schemas</strong> check that data coming from outside is valid. For
+                example, a project name can't be empty or longer than 100 characters, and a request
+                can't include unknown fields.
+              </p>
+              <p class="he">
+                החבילה <code>shared</code> מתארת את העולם של TaskForge.
+                <strong>טיפוסים (types)</strong> מגדירים איך נראים פרויקט וסוגיה.
+                <strong>סכמות zod</strong> בודקות שמידע שמגיע מבחוץ תקין. למשל, שם פרויקט לא יכול
+                להיות ריק או ארוך מ-100 תווים, ובקשה לא יכולה לכלול שדות לא מוכרים.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">server/shared/src/schemas/project.ts</span><span class="c">// POST body. Strict, so id / timestamps cannot be set by clients.</span>
+<span class="k">export const</span> createProjectSchema = z.strictObject({
+  name: requiredText(TEXT_LIMITS.name),          <span class="c">// trimmed, NFC, 1–100 chars</span>
+  description: optionalText(TEXT_LIMITS.description),
+});</pre>
+              <div class="built">
+                <h4><span class="en">What we built</span><span class="he">מה בנינו</span></h4>
+                <ul class="en">
+                  <li>
+                    <code>domain.ts</code>: Project, Issue, statuses
+                    <code>open / in_progress / closed</code>, priorities
+                    <code>low / medium / high</code>
+                  </li>
+                  <li>Schemas for create (POST), replace (PUT), patch (PATCH) and list queries</li>
+                  <li>
+                    <code>ErrorCode</code>: <code>VALIDATION_ERROR</code>, <code>NOT_FOUND</code>,
+                    <code>CONFLICT</code>, <code>INTERNAL_ERROR</code>
+                  </li>
+                </ul>
+                <ul class="he">
+                  <li>
+                    <code>domain.ts</code>: פרויקט, סוגיה, סטטוסים
+                    <code>open / in_progress / closed</code>, עדיפויות
+                    <code>low / medium / high</code>
+                  </li>
+                  <li>סכמות ליצירה (POST), להחלפה (PUT), לעדכון חלקי (PATCH) ולשאילתות רשימה</li>
+                  <li>
+                    <code>ErrorCode</code>: ‏<code>VALIDATION_ERROR</code>, <code>NOT_FOUND</code>,
+                    <code>CONFLICT</code>, <code>INTERNAL_ERROR</code>
+                  </li>
+                </ul>
+              </div>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  TypeScript checks your code while you write it. zod checks the data while the
+                  program runs. You need both.
+                </p>
+                <p class="he">
+                  TypeScript בודק את הקוד בזמן הכתיבה. zod בודק את המידע בזמן הריצה. צריך את שניהם.
+                </p>
+              </div>
+              <details class="more">
+                <summary>
+                  <span class="en">Go deeper: "as const" instead of enum</span
+                  ><span class="he">להרחבה: ‏as const במקום enum</span>
+                </summary>
+                <div class="more-body">
+                  <p class="en">
+                    The project doesn't use TypeScript's <code>enum</code>, because Node.js runs
+                    <code>.ts</code> files directly by simply erasing the types, and an enum is not
+                    just a type. Instead we write a plain array and derive the type from it:
+                  </p>
+                  <p class="he">
+                    הפרויקט לא משתמש ב-<code>enum</code> של TypeScript, כי Node.js מריץ קבצי
+                    <code>.ts</code> ישירות פשוט על ידי מחיקת הטיפוסים, ו-enum הוא לא רק טיפוס.
+                    במקום זה כותבים מערך רגיל ומפיקים ממנו את הטיפוס:
+                  </p>
+                  <pre
+                    class="code"
+                  ><span class="k">export const</span> ISSUE_STATUSES = [<span class="s">'open'</span>, <span class="s">'in_progress'</span>, <span class="s">'closed'</span>] <span class="k">as const</span>;
+<span class="k">export type</span> IssueStatus = (<span class="k">typeof</span> ISSUE_STATUSES)[number];
+<span class="c">// IssueStatus = 'open' | 'in_progress' | 'closed'</span></pre>
+                </div>
+              </details>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l3" data-lesson="l3" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l4">
+            <span class="lesson-no">04</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Hebrew and two languages</span
+                ><span class="he">עברית ושתי שפות</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>c7f12ad</code><code>481cc88</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-intl">Unicode &amp; Intl</a
+                  ><a class="chip" href="#t-zod">zod</a></span
+                >
+              </div>
+              <p class="en">
+                TaskForge speaks Hebrew properly. Every message the user can see lives in two
+                <strong>catalogs</strong>, <code>messages.en.ts</code> and
+                <code>messages.he.ts</code>. When a request sends the header
+                <code>Accept-Language: he</code>, errors come back in Hebrew. A custom zod
+                <strong>error map</strong> even translates the validation errors.
+              </p>
+              <p class="he">
+                TaskForge מדברת עברית כמו שצריך. כל הודעה שהמשתמש יכול לראות נמצאת בשני
+                <strong>קטלוגים</strong>: <code>messages.en.ts</code> ו-<code>messages.he.ts</code>.
+                כשבקשה שולחת את הכותרת <code>Accept-Language: he</code>, השגיאות חוזרות בעברית.
+                <strong>מפת שגיאות</strong> מותאמת של zod מתרגמת אפילו את שגיאות הוולידציה.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">POST /projects  ·  Accept-Language: he  →  409</span>{
+  <span class="s">"error"</span>: {
+    <span class="s">"code"</span>: <span class="s">"CONFLICT"</span>,
+    <span class="s">"message"</span>: <span class="s">"פרויקט בשם \"אתר החברה\" כבר קיים"</span>
+  }
+}</pre>
+              <p class="en">
+                Hebrew text needs care in three more places. Text is
+                <strong>normalized to NFC</strong>, so the same word typed two ways is stored the
+                same way. Lengths are counted in <strong>code points</strong>, so a letter with
+                nikud or an emoji isn't counted twice. Sorting uses <code>Intl.Collator</code>, so
+                Hebrew titles come out in alphabet order.
+              </p>
+              <p class="he">
+                טקסט בעברית צריך תשומת לב בעוד שלושה מקומות. הטקסט <strong>מנורמל ל-NFC</strong>, כך
+                שאותה מילה שהוקלדה בשתי דרכים נשמרת אותו דבר. האורך נספר ב-<strong
+                  >code points</strong
+                >, כך שאות עם ניקוד או אימוג'י לא נספרים פעמיים. המיון משתמש
+                ב-<code>Intl.Collator</code>, כך שכותרות בעברית יוצאות לפי סדר האלף-בית.
+              </p>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  The error <code>code</code> is always the same English constant, so programs can
+                  rely on it. Only the <code>message</code>, which people read, is translated.
+                </p>
+                <p class="he">
+                  ה-<code>code</code> של שגיאה הוא תמיד אותו קבוע באנגלית, כדי שתוכנות יוכלו לסמוך
+                  עליו. רק ה-<code>message</code>, שבני אדם קוראים, מתורגם.
+                </p>
+              </div>
+              <details class="more">
+                <summary>
+                  <span class="en">Go deeper: the case-insensitive filter fix</span
+                  ><span class="he">להרחבה: התיקון של סינון בלי רגישות לאותיות</span>
+                </summary>
+                <div class="more-body">
+                  <p class="en">
+                    Commit <code>481cc88</code> made list filters accept
+                    <code>?status=OPEN</code> as well as <code>?status=open</code>. It's a small
+                    change, but it shows the habit of the whole project: when you find a bug, fix it
+                    in its own commit with a test that proves it.
+                  </p>
+                  <p class="he">
+                    הקומיט <code>481cc88</code> גרם לפילטרים של רשימות לקבל גם
+                    <code>?status=OPEN</code> וגם <code>?status=open</code>. שינוי קטן, אבל הוא מראה
+                    את ההרגל של כל הפרויקט: כשמוצאים באג, מתקנים אותו בקומיט נפרד עם בדיקה שמוכיחה
+                    את התיקון.
+                  </p>
+                </div>
+              </details>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l4" data-lesson="l4" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l5">
+            <span class="lesson-no">05</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Storage behind interfaces</span
+                ><span class="he">אחסון מאחורי ממשקים</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>480154a</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-repo">Repository pattern</a
+                  ><a class="chip" href="#t-vitest">Vitest</a></span
+                >
+              </div>
+              <p class="en">
+                The rest of the code never talks to a database or a file directly. It talks to a
+                <strong>repository interface</strong>, a list of promises like "find this project"
+                or "save this issue". Then we can swap how data is stored without touching the
+                business logic.
+              </p>
+              <p class="he">
+                שאר הקוד אף פעם לא מדבר ישירות עם מסד נתונים או קובץ. הוא מדבר עם
+                <strong>ממשק repository</strong>, רשימה של הבטחות כמו "מצא את הפרויקט הזה" או "שמור
+                את הסוגיה הזאת". כך אפשר להחליף את צורת האחסון בלי לגעת בלוגיקה העסקית.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">server/storage/src/types.ts (simplified)</span><span class="k">interface</span> ProjectRepository {
+  list(opts: ListOptions&lt;<span class="s">'name'</span>&gt;): Promise&lt;Page&lt;Project&gt;&gt;;
+  findById(id: string): Promise&lt;Project | <span class="k">null</span>&gt;;
+  create(project: Project): Promise&lt;Project&gt;;
+  delete(id: string): Promise&lt;boolean&gt;;
+}</pre>
+              <p class="en">
+                The first implementation keeps everything in memory, which is fast and great for
+                tests. We also wrote <strong>contract tests</strong>: one test suite that any
+                implementation must pass. Later the JSON-file version ran the exact same suite.
+              </p>
+              <p class="he">
+                המימוש הראשון שומר הכול בזיכרון: מהיר ומצוין לבדיקות. כתבנו גם
+                <strong>בדיקות חוזה (contract tests)</strong>: סט בדיקות אחד שכל מימוש חייב לעבור.
+                מאוחר יותר גרסת קובץ ה-JSON הריצה בדיוק את אותו סט.
+              </p>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  Program against an interface. If you add SQLite tomorrow, it only has to pass the
+                  same contract tests.
+                </p>
+                <p class="he">
+                  כותבים קוד מול ממשק. אם מחר מוסיפים SQLite, הוא רק צריך לעבור את אותן בדיקות חוזה.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l5" data-lesson="l5" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l6">
+            <span class="lesson-no">06</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Errors and middleware</span
+                ><span class="he">שגיאות ו-middleware</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>b847f55</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-express">Express 5</a
+                  ><a class="chip" href="#t-zod">zod</a></span
+                >
+              </div>
+              <p class="en">
+                In Express, a <strong>middleware</strong> is a function that every request passes
+                through, like a checkpoint. TaskForge has four: <code>locale</code> picks Hebrew or
+                English, <code>validate</code> runs the zod schemas, <code>notFound</code> catches
+                unknown URLs, and <code>errorHandler</code> turns any error into a clean JSON
+                answer.
+              </p>
+              <p class="he">
+                ב-Express, <strong>middleware</strong> הוא פונקציה שכל בקשה עוברת דרכה, כמו מחסום
+                בדיקה. ב-TaskForge יש ארבעה: <code>locale</code> בוחר עברית או אנגלית,
+                <code>validate</code> מריץ את סכמות ה-zod, <code>notFound</code> תופס כתובות לא
+                מוכרות, ו-<code>errorHandler</code> הופך כל שגיאה לתשובת JSON נקייה.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">server/api/src/errors/app-error.ts</span><span class="k">export class</span> NotFoundError <span class="k">extends</span> AppError {
+  <span class="k">static</span> project(id: string): NotFoundError {
+    <span class="k">return new</span> NotFoundError(<span class="s">'error.notFound.project'</span>, { id });
+  }
+}
+<span class="c">// A service just throws: the central handler builds the 404 response.</span>
+<span class="k">throw</span> NotFoundError.project(projectId);</pre>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  One place builds every error response. Services only <em>throw</em>. That keeps
+                  errors consistent and never leaks a stack trace to the user.
+                </p>
+                <p class="he">
+                  מקום אחד בונה כל תשובת שגיאה. השירותים רק <em>זורקים</em> שגיאה. כך השגיאות
+                  אחידות, ואף פעם לא דולף stack trace למשתמש.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l6" data-lesson="l6" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l7">
+            <span class="lesson-no">07</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">The endpoints: projects and issues</span
+                ><span class="he">נקודות הקצה: פרויקטים וסוגיות</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>1f8cac2</code><code>63eff0e</code><code>c70447c</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-rest">REST</a
+                  ><a class="chip" href="#t-express">Express 5</a><a class="chip" href="#t-di">DI</a
+                  ><a class="chip" href="#t-supertest">Supertest</a></span
+                >
+              </div>
+              <p class="en">
+                Now the API comes alive. Each URL is an <strong>endpoint</strong>.
+                <strong>Routes</strong> are thin: they read the request and call a
+                <strong>service</strong>. Services hold the real rules: project names must be
+                unique, deleting a project deletes its issues first, and every issue gets a number
+                per project (#1, #2, #3) that is never reused.
+              </p>
+              <p class="he">
+                עכשיו השרת מתעורר לחיים. כל כתובת היא <strong>נקודת קצה (endpoint)</strong>.
+                ה-<strong>routes</strong> דקים: הם קוראים את הבקשה וקוראים
+                ל-<strong>service</strong>. ה-services מחזיקים את החוקים האמיתיים: שם פרויקט חייב
+                להיות ייחודי, מחיקת פרויקט מוחקת קודם את הסוגיות שלו, ולכל סוגיה יש מספר בתוך
+                הפרויקט (‎#1, ‎#2, ‎#3) שלא חוזר על עצמו לעולם.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">REST endpoints</span>GET    /projects                          <span class="c">list (paginated, sorted)</span>
+POST   /projects                          <span class="c">create</span>
+PATCH  /projects/:projectId               <span class="c">partial update</span>
+DELETE /projects/:projectId               <span class="c">cascades issues → 204</span>
+GET    /projects/:projectId/issues        <span class="c">?status&amp;priority&amp;q&amp;sort&amp;limit&amp;offset</span>
+POST   /projects/:projectId/issues
+PATCH  /projects/:projectId/issues/:issueId</pre>
+              <p class="en">
+                Services don't call <code>new Date()</code> or
+                <code>crypto.randomUUID()</code> themselves. They receive a <code>clock</code> and
+                an <code>idGen</code> from outside. In tests we pass a fake clock, so results are
+                predictable.
+              </p>
+              <p class="he">
+                ה-services לא קוראים בעצמם ל-<code>new Date()</code> או
+                ל-<code>crypto.randomUUID()</code>. הם מקבלים <code>clock</code> ו-<code
+                  >idGen</code
+                >
+                מבחוץ. בבדיקות מעבירים שעון מזויף, כך שהתוצאות צפויות.
+              </p>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  Every endpoint and every error path has a Supertest integration test. If a test
+                  exists, a feature exists.
+                </p>
+                <p class="he">
+                  לכל נקודת קצה ולכל מסלול שגיאה יש בדיקת אינטגרציה עם Supertest. אם יש בדיקה, יש
+                  פיצ'ר.
+                </p>
+              </div>
+              <details class="more">
+                <summary>
+                  <span class="en">Go deeper: pagination and sorting</span
+                  ><span class="he">להרחבה: עימוד ומיון</span>
+                </summary>
+                <div class="more-body">
+                  <p class="en">
+                    Lists never return everything at once. You ask for
+                    <code>?limit=20&amp;offset=40</code> and get back
+                    <code>{ data, pagination: { total, limit, offset } }</code>. Sorting with
+                    <code>?sort=-createdAt</code> means newest first (the minus sign flips the
+                    order). Priority sorts by rank (low &lt; medium &lt; high), not by alphabet.
+                  </p>
+                  <p class="he">
+                    רשימות אף פעם לא מחזירות הכול בבת אחת. מבקשים
+                    <code>?limit=20&amp;offset=40</code> ומקבלים
+                    <code>{ data, pagination: { total, limit, offset } }</code>. מיון עם
+                    <code>?sort=-createdAt</code> פירושו החדש ביותר קודם (המינוס הופך את הסדר).
+                    עדיפות ממוינת לפי דרגה (low &lt; medium &lt; high), ולא לפי האלף-בית.
+                  </p>
+                </div>
+              </details>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l7" data-lesson="l7" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l8">
+            <span class="lesson-no">08</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Saving to a JSON file</span
+                ><span class="he">שמירה לקובץ JSON</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>2e6b1b5</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-json">JSON storage</a
+                  ><a class="chip" href="#t-node">Node.js</a></span
+                >
+              </div>
+              <p class="en">
+                Memory is erased when the server stops, so we added real storage: a single JSON
+                file. Saving a file safely is harder than it looks. If the computer crashes halfway
+                through a write, the file could be left broken. So TaskForge writes to
+                <code>taskforge.json.tmp</code> first, then <strong>renames</strong> it over the
+                real file in one step. That is called an <strong>atomic write</strong>.
+              </p>
+              <p class="he">
+                הזיכרון נמחק כשהשרת נעצר, ולכן הוספנו אחסון אמיתי: קובץ JSON אחד. לשמור קובץ בבטחה
+                זה קשה יותר ממה שזה נראה. אם המחשב קורס באמצע כתיבה, הקובץ יכול להישאר שבור. לכן
+                TaskForge כותבת קודם ל-<code>taskforge.json.tmp</code>, ואז
+                <strong>משנה את שמו</strong> לקובץ האמיתי בצעד אחד. זה נקרא
+                <strong>כתיבה אטומית</strong>.
+              </p>
+              <div class="built">
+                <h4><span class="en">What we built</span><span class="he">מה בנינו</span></h4>
+                <ul class="en">
+                  <li>A write queue, so two saves never run at the same time</li>
+                  <li>
+                    A retry on rename, because Windows and OneDrive can lock a file for a moment
+                  </li>
+                  <li>
+                    A <code>version</code> field and <code>migrations.ts</code>, so old files can be
+                    upgraded later
+                  </li>
+                </ul>
+                <ul class="he">
+                  <li>תור כתיבה, כך ששתי שמירות אף פעם לא רצות באותו זמן</li>
+                  <li>ניסיון חוזר בשינוי שם, כי Windows ו-OneDrive יכולים לנעול קובץ לרגע</li>
+                  <li>
+                    שדה <code>version</code> וקובץ <code>migrations.ts</code>, כדי שאפשר יהיה לשדרג
+                    קבצים ישנים בעתיד
+                  </li>
+                </ul>
+              </div>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  The JSON repositories passed the <em>same</em> contract tests as the in-memory
+                  ones from lesson 05. That's the payoff of interfaces.
+                </p>
+                <p class="he">
+                  ה-repositories של JSON עברו את <em>אותן</em> בדיקות חוזה כמו אלה של הזיכרון משיעור
+                  05. זה הרווח מעבודה עם ממשקים.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l8" data-lesson="l8" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l9">
+            <span class="lesson-no">09</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Config, server entry and demo data</span
+                ><span class="he">הגדרות, נקודת כניסה ונתוני דמו</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>7fd82a1</code><code>b1bbd32</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-node">Node.js</a
+                  ><a class="chip" href="#t-di">DI</a></span
+                >
+              </div>
+              <p class="en">
+                <code>config.ts</code> reads settings from environment variables:
+                <code>PORT</code> (3000), <code>HOST</code> and <code>DATA_FILE</code>.
+                <code>server.ts</code> wires everything together and is the <em>only</em> file that
+                calls <code>listen()</code>. The app itself is built by
+                <code>createApp(deps)</code>, which tests can call without opening a real network
+                port.
+              </p>
+              <p class="he">
+                <code>config.ts</code> קורא הגדרות ממשתני סביבה: <code>PORT</code> (3000),
+                <code>HOST</code> ו-<code>DATA_FILE</code>. <code>server.ts</code> מחבר את כל החלקים
+                והוא הקובץ <em>היחיד</em> שקורא ל-<code>listen()</code>. האפליקציה עצמה נבנית על ידי
+                <code>createApp(deps)</code>, שבדיקות יכולות לקרוא לה בלי לפתוח פורט רשת אמיתי.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">server/api/src/server.ts</span><span class="k">const</span> app = createApp({
+  projects: <span class="k">new</span> JsonProjectRepository(store),
+  issues: <span class="k">new</span> JsonIssueRepository(store),
+  idGen: () =&gt; randomUUID(),
+  clock: () =&gt; <span class="k">new</span> Date(),
+});
+app.listen(config.port, config.host);</pre>
+              <p class="en">
+                We also added <code>npm run seed</code>, which fills the app with realistic demo
+                projects and issues, so the UI has something to show from the first minute.
+              </p>
+              <p class="he">
+                הוספנו גם את <code>npm run seed</code>, שממלא את האפליקציה בפרויקטים וסוגיות דמו
+                מציאותיים, כך שלממשק יש מה להציג מהדקה הראשונה.
+              </p>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l9" data-lesson="l9" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+        </section>
+
+        <!-- ===================== MODULE 3 ===================== -->
+        <section class="module m3" id="module-3">
+          <div class="module-head">
+            <span class="tag">M3</span>
+            <h2>
+              <span class="en">The web UI (frontend)</span
+              ><span class="he">ממשק המשתמש (Frontend)</span>
+            </h2>
+            <p>
+              <span class="en">A calm, dense, keyboard-friendly interface on top of the API.</span
+              ><span class="he">ממשק רגוע, צפוף וידידותי למקלדת שיושב מעל השרת.</span>
+            </p>
+          </div>
+
+          <article class="lesson" id="l10">
+            <span class="lesson-no">10</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Design tokens, app shell and theme</span
+                ><span class="he">טוקנים של עיצוב, מעטפת וערכת נושא</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>5ee055c</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-react">React</a><a class="chip" href="#t-vite">Vite</a
+                  ><a class="chip" href="#t-css">CSS Modules</a
+                  ><a class="chip" href="#t-fonts">IBM Plex</a></span
+                >
+              </div>
+              <p class="en">
+                First we wrote <code>DESIGN.md</code>, the visual rules. The style is called
+                "engineering logbook": paper and ink colors, thin lines, and one red-orange
+                <strong>signal</strong> color for the main action. Every color, size and timing
+                became a <strong>design token</strong>, a CSS variable in <code>tokens.css</code>.
+                Components never use raw values.
+              </p>
+              <p class="he">
+                קודם כתבנו את <code>DESIGN.md</code>, חוקי העיצוב. הסגנון נקרא "יומן הנדסי": צבעי
+                נייר ודיו, קווים דקים, וצבע <strong>signal</strong> אדום-כתום אחד לפעולה הראשית. כל
+                צבע, גודל ותזמון הפכו ל-<strong>טוקן עיצוב</strong>, משתנה CSS בקובץ
+                <code>tokens.css</code>. קומפוננטות אף פעם לא משתמשות בערכים גולמיים.
+              </p>
+              <pre class="code"><span class="file">client/src/styles/tokens.css</span>:root {
+  --paper:  light-dark(#f4f1e8, #1c1b18);
+  --ink:    light-dark(#1d1b17, #eae4d8);
+  --signal: light-dark(#b5361a, #ee7455);  <span class="c">/* the single accent */</span>
+}</pre>
+              <p class="en">
+                This course page uses the same tokens, so what you're looking at now <em>is</em> the
+                TaskForge design.
+              </p>
+              <p class="he">
+                הדף הזה משתמש באותם טוקנים, כך שמה שאתם רואים עכשיו <em>הוא</em> העיצוב של
+                TaskForge.
+              </p>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  <code>light-dark()</code> holds both theme colors in one line. Dark mode is tuned
+                  by hand, not just inverted.
+                </p>
+                <p class="he">
+                  <code>light-dark()</code> מחזיק את הצבעים של שתי ערכות הנושא בשורה אחת. המצב הכהה
+                  מכוון ידנית, ולא רק הפוך.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l10" data-lesson="l10" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l11">
+            <span class="lesson-no">11</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Talking to the API</span><span class="he">מדברים עם השרת</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>bdd968a</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-query">TanStack Query</a
+                  ><a class="chip" href="#t-vite">Vite proxy</a></span
+                >
+              </div>
+              <p class="en">
+                <code>client/src/api/client.ts</code> is the <strong>one and only</strong> place
+                that calls <code>fetch</code>. Any failure, including a network problem, becomes an
+                <code>ApiError</code> that carries the server's own message. Views never call fetch.
+                They use <strong>React Query hooks</strong> like <code>useProjects()</code> and
+                <code>useIssues()</code>, which handle loading, caching and refetching.
+              </p>
+              <p class="he">
+                <code>client/src/api/client.ts</code> הוא המקום <strong>היחיד</strong> שקורא
+                ל-<code>fetch</code>. כל כישלון, כולל בעיית רשת, הופך ל-<code>ApiError</code> שנושא
+                את ההודעה של השרת עצמו. התצוגות אף פעם לא קוראות ל-fetch. הן משתמשות ב-<strong
+                  >hooks של React Query</strong
+                >
+                כמו <code>useProjects()</code> ו-<code>useIssues()</code>, שמטפלים בטעינה, במטמון
+                (cache) ובטעינה מחדש.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">client/src/api/issues.ts</span><span class="k">export function</span> useIssues(projectId: string, params: IssueListParams) {
+  <span class="k">return</span> useQuery({
+    queryKey: keys.issueList(projectId, params),
+    queryFn: ({ signal }) =&gt; api.listIssues(projectId, params, signal),
+    <span class="c">// Keep showing the previous rows while a new filter loads.</span>
+    placeholderData: keepPreviousData,
+  });
+}</pre>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  The browser calls <code>/api/...</code>, and Vite forwards it to port 3000. The
+                  browser sees a single address, so no CORS setup is needed.
+                </p>
+                <p class="he">
+                  הדפדפן קורא ל-<code>/api/...</code> ו-Vite מעביר את זה לפורט 3000. הדפדפן רואה
+                  כתובת אחת, ולכן לא צריך להגדיר CORS.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l11" data-lesson="l11" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l12">
+            <span class="lesson-no">12</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">The projects sidebar</span><span class="he">סרגל הפרויקטים</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>8c30962</code><code>6f64205</code><code>33db769</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-radix">Radix UI</a
+                  ><a class="chip" href="#t-router">React Router</a></span
+                >
+              </div>
+              <p class="en">
+                The sidebar lists every project with its count of open issues. You can create a
+                project right in the list, rename it in place, and delete it. Deleting asks first in
+                a <strong>confirm dialog</strong>, because it also removes all of the project's
+                issues.
+              </p>
+              <p class="he">
+                הסרגל הצדדי מציג כל פרויקט עם מספר הסוגיות הפתוחות שלו. אפשר ליצור פרויקט ישר
+                ברשימה, לשנות לו שם במקום, ולמחוק אותו. המחיקה שואלת קודם ב-<strong
+                  >חלון אישור</strong
+                >, כי היא מוחקת גם את כל הסוגיות של הפרויקט.
+              </p>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  Dialogs and menus come from Radix. Focus traps, Esc to close and screen-reader
+                  labels are hard to get right, so we don't hand-roll them.
+                </p>
+                <p class="he">
+                  חלונות ותפריטים מגיעים מ-Radix. לכידת פוקוס, סגירה ב-Esc ותוויות לקוראי מסך קשים
+                  לביצוע נכון, ולכן לא כותבים אותם לבד.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l12" data-lesson="l12" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l13">
+            <span class="lesson-no">13</span>
+            <div class="lesson-body">
+              <h3><span class="en">The issues table</span><span class="he">טבלת הסוגיות</span></h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>adf50ec</code><code>459ca0b</code><code>7fdee0c</code
+                  ><code>1872f67</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-table">TanStack Table</a
+                  ><a class="chip" href="#t-router">React Router</a
+                  ><a class="chip" href="#t-css">CSS Modules</a></span
+                >
+              </div>
+              <p class="en">
+                The heart of the app. The first step was storing the table's state in the
+                <strong>URL</strong>:
+                <code
+                  >?status=open&amp;priority=high&amp;q=login&amp;sort=-createdAt&amp;page=2</code
+                >. Because of that, the Back button works, a refresh keeps your filters, and you can
+                send a link to a teammate.
+              </p>
+              <p class="he">
+                הלב של האפליקציה. הצעד הראשון היה לשמור את מצב הטבלה ב-<strong>כתובת (URL)</strong>:
+                <code
+                  >?status=open&amp;priority=high&amp;q=login&amp;sort=-createdAt&amp;page=2</code
+                >. בזכות זה כפתור "אחורה" עובד, רענון שומר את הפילטרים, ואפשר לשלוח קישור לחבר צוות.
+              </p>
+              <div class="built">
+                <h4><span class="en">What we built</span><span class="he">מה בנינו</span></h4>
+                <ul class="en">
+                  <li>A sortable table built on TanStack Table</li>
+                  <li>Search, status and priority filters, and a columns menu</li>
+                  <li>A footer with "21–40 of 57", the sort summary and a pager</li>
+                  <li>
+                    Designed <strong>loading</strong> (skeleton rows), <strong>empty</strong> and
+                    <strong>error</strong> (message + Retry) states
+                  </li>
+                  <li>Container queries: the table adapts to its own width, not the window's</li>
+                </ul>
+                <ul class="he">
+                  <li>טבלה עם מיון שבנויה על TanStack Table</li>
+                  <li>חיפוש, פילטרים לסטטוס ולעדיפות, ותפריט עמודות</li>
+                  <li>שורת תחתית עם "21–40 מתוך 57", סיכום המיון ודפדוף</li>
+                  <li>
+                    מצבים מעוצבים ל<strong>טעינה</strong> (שורות שלד), ל<strong>ריק</strong>
+                    ול<strong>שגיאה</strong> (הודעה + נסה שוב)
+                  </li>
+                  <li>Container queries: הטבלה מתאימה את עצמה לרוחב שלה, ולא לרוחב החלון</li>
+                </ul>
+              </div>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  If state lives in the URL, don't copy it into React state. Keep one source of
+                  truth.
+                </p>
+                <p class="he">אם מצב נמצא ב-URL, לא משכפלים אותו ל-state של React. מקור אמת אחד.</p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l13" data-lesson="l13" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l14">
+            <span class="lesson-no">14</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">The issue panel and optimistic editing</span
+                ><span class="he">פאנל הסוגיה ועריכה אופטימית</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>2aeac7d</code><code>bf429ff</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-query">TanStack Query</a
+                  ><a class="chip" href="#t-router">React Router</a></span
+                >
+              </div>
+              <p class="en">
+                Clicking a row opens a side panel at <code>/p/:projectId/i/:issueId</code>. You edit
+                the title, description, status or priority right there. Saves are
+                <strong>optimistic</strong>: the screen shows your change immediately, the request
+                goes to the server in the background, and if the server says no, the change
+                <strong>rolls back</strong> and you see why.
+              </p>
+              <p class="he">
+                לחיצה על שורה פותחת פאנל צדדי בכתובת <code>/p/:projectId/i/:issueId</code>. עורכים
+                שם ישירות את הכותרת, התיאור, הסטטוס או העדיפות. השמירות <strong>אופטימיות</strong>:
+                המסך מציג את השינוי מיד, הבקשה נשלחת לשרת ברקע, ואם השרת מסרב, השינוי
+                <strong>מתבטל</strong> ורואים למה.
+              </p>
+              <details class="more">
+                <summary>
+                  <span class="en">Go deeper: how the rollback works</span
+                  ><span class="he">להרחבה: איך עובד הביטול</span>
+                </summary>
+                <div class="more-body">
+                  <p class="en">
+                    In <code>usePatchIssue</code>, <code>onMutate</code> saves a copy of the issue
+                    and of every cached list, then writes the new values into the cache.
+                    <code>onError</code> puts the copies back. <code>onSettled</code> refetches the
+                    lists, because the change might move the issue in or out of the current filter.
+                  </p>
+                  <p class="he">
+                    ב-<code>usePatchIssue</code>, הפונקציה <code>onMutate</code> שומרת עותק של
+                    הסוגיה ושל כל רשימה במטמון, ואז כותבת את הערכים החדשים למטמון.
+                    <code>onError</code> מחזירה את העותקים. <code>onSettled</code> טוענת מחדש את
+                    הרשימות, כי השינוי יכול להכניס את הסוגיה לפילטר הנוכחי או להוציא אותה ממנו.
+                  </p>
+                </div>
+              </details>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l14" data-lesson="l14" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l15">
+            <span class="lesson-no">15</span>
+            <div class="lesson-body">
+              <h3><span class="en">Keyboard first</span><span class="he">קודם כל מקלדת</span></h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>a67ada9</code><code>18704d6</code></span
+                ><span class="chips"><a class="chip" href="#t-react">React hooks</a></span>
+              </div>
+              <p class="en">
+                Power users love the keyboard. <strong>Quick-add</strong> lets you type a title and
+                press Enter to create an issue. In the table, <kbd>J</kbd> and <kbd>K</kbd> move
+                down and up, <kbd>Enter</kbd> opens the issue, <kbd>/</kbd> jumps to search and
+                <kbd>?</kbd> shows every shortcut.
+              </p>
+              <p class="he">
+                משתמשים מתקדמים אוהבים מקלדת. <strong>הוספה מהירה</strong> מאפשרת להקליד כותרת
+                וללחוץ Enter כדי ליצור סוגיה. בטבלה, <kbd>J</kbd> ו-<kbd>K</kbd> זזים למטה ולמעלה,
+                <kbd>Enter</kbd> פותח את הסוגיה, <kbd>/</kbd> קופץ לחיפוש ו-<kbd>?</kbd> מציג את כל
+                הקיצורים.
+              </p>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  The <code>useHotkeys</code> hook ignores keys while you type in a field or work
+                  inside a menu, so pressing <kbd>J</kbd> in the search box types a "j".
+                </p>
+                <p class="he">
+                  ה-hook ‏<code>useHotkeys</code> מתעלם ממקשים כשמקלידים בשדה או עובדים בתוך תפריט,
+                  כך שלחיצה על <kbd>J</kbd> בתיבת החיפוש פשוט מקלידה "j".
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l15" data-lesson="l15" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+        </section>
+
+        <!-- ===================== MODULE 4 ===================== -->
+        <section class="module m4" id="module-4">
+          <div class="module-head">
+            <span class="tag">M4</span>
+            <h2>
+              <span class="en">Quality and shipping</span><span class="he">איכות ומסירה</span>
+            </h2>
+            <p>
+              <span class="en">Find the bugs, prove it works, write it down, merge.</span
+              ><span class="he">מוצאים באגים, מוכיחים שזה עובד, מתעדים וממזגים.</span>
+            </p>
+          </div>
+
+          <article class="lesson" id="l16">
+            <span class="lesson-no">16</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Fix what you find</span
+                ><span class="he">מתקנים את מה שמוצאים</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>d542818</code><code>b5a484c</code><code>0488767</code
+                  ><code>f132a11</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-router">React Router</a
+                  ><a class="chip" href="#t-git">Git</a></span
+                >
+              </div>
+              <p class="en">
+                Using the app for real found four problems, and each one got its own small commit:
+              </p>
+              <p class="he">שימוש אמיתי באפליקציה גילה ארבע בעיות, ולכל אחת היה קומיט קטן משלה:</p>
+              <div class="built">
+                <ul class="en">
+                  <li>A duplicate "New issue" button in the empty state</li>
+                  <li>Too much of the signal color, and titles squeezed beside the panel</li>
+                  <li>
+                    <kbd>Esc</kbd> saved text you meant to throw away, and filter controls flickered
+                  </li>
+                  <li>
+                    URL updates were ignored until we switched to the DOM
+                    <code>RouterProvider</code>
+                  </li>
+                </ul>
+                <ul class="he">
+                  <li>כפתור "סוגיה חדשה" כפול במצב הריק</li>
+                  <li>יותר מדי צבע signal, וכותרות שנדחסו ליד הפאנל</li>
+                  <li><kbd>Esc</kbd> שמר טקסט שרצית לזרוק, ופקדי הסינון הבהבו</li>
+                  <li>עדכוני URL לא נקלטו, עד שעברנו ל-<code>RouterProvider</code> של DOM</li>
+                </ul>
+              </div>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  Fix commits are normal. Small, clear commits make history easy to read and easy to
+                  undo.
+                </p>
+                <p class="he">
+                  קומיטים של תיקונים הם דבר רגיל. קומיטים קטנים וברורים הופכים את ההיסטוריה לקלה
+                  לקריאה ולביטול.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l16" data-lesson="l16" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l17">
+            <span class="lesson-no">17</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">End-to-end tests</span><span class="he">בדיקות קצה לקצה</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>8e7e524</code></span
+                ><span class="chips"><a class="chip" href="#t-playwright">Playwright</a></span>
+              </div>
+              <p class="en">
+                Unit tests check small pieces. <strong>End-to-end (E2E)</strong> tests check the
+                whole app the way a user does. Playwright opens a real Chromium browser, clicks
+                buttons and types text. It starts its own API on port 3210 with a temporary data
+                file, and its own Vite on port 5190, so it never touches your real data.
+              </p>
+              <p class="he">
+                בדיקות יחידה בודקות חלקים קטנים. בדיקות <strong>קצה לקצה (E2E)</strong> בודקות את כל
+                האפליקציה כמו שמשתמש עובד איתה. Playwright פותח דפדפן Chromium אמיתי, לוחץ על
+                כפתורים ומקליד טקסט. הוא מפעיל שרת API משלו בפורט 3210 עם קובץ נתונים זמני, ו-Vite
+                משלו בפורט 5190, כך שהוא אף פעם לא נוגע בנתונים האמיתיים שלכם.
+              </p>
+              <div class="built">
+                <h4><span class="en">Spec files</span><span class="he">קבצי הבדיקות</span></h4>
+                <ul class="en">
+                  <li><code>projects.spec.ts</code>: create, rename, delete</li>
+                  <li><code>issues.spec.ts</code>: quick-add and URL filters</li>
+                  <li><code>editing.spec.ts</code>: optimistic edits and rollback</li>
+                  <li><code>keyboard.spec.ts</code>: J/K/Enter, / and ?</li>
+                </ul>
+                <ul class="he">
+                  <li><code>projects.spec.ts</code>: יצירה, שינוי שם, מחיקה</li>
+                  <li><code>issues.spec.ts</code>: הוספה מהירה ופילטרים ב-URL</li>
+                  <li><code>editing.spec.ts</code>: עריכות אופטימיות וביטול</li>
+                  <li><code>keyboard.spec.ts</code>: ‏J/K/Enter, ‏/ ו-?</li>
+                </ul>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l17" data-lesson="l17" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+
+          <article class="lesson" id="l18">
+            <span class="lesson-no">18</span>
+            <div class="lesson-body">
+              <h3>
+                <span class="en">Document and merge</span><span class="he">תיעוד ומיזוג</span>
+              </h3>
+              <div class="meta-row">
+                <span class="commits"
+                  ><span class="en">commits</span><span class="he">קומיטים</span>
+                  <code>8d28965</code><code>78aa0b0</code></span
+                ><span class="chips"
+                  ><a class="chip" href="#t-git">Git &amp; GitHub</a
+                  ><a class="chip" href="#t-claude">CLAUDE.md</a></span
+                >
+              </div>
+              <p class="en">
+                The UI was built on a <strong>feature branch</strong> (<code>feature/web-ui</code>).
+                When it was done, <code>CLAUDE.md</code> was updated with the new commands and
+                frontend rules, and the branch was merged into <code>main</code> through
+                <strong>Pull Request #1</strong>.
+              </p>
+              <p class="he">
+                הממשק נבנה על <strong>ענף פיצ'ר</strong> (<code>feature/web-ui</code>). כשהוא
+                הסתיים, <code>CLAUDE.md</code> עודכן עם הפקודות החדשות וחוקי ה-frontend, והענף מוזג
+                ל-<code>main</code> דרך <strong>Pull Request #1</strong>.
+              </p>
+              <pre
+                class="code"
+              ><span class="file">Definition of done</span>npm run typecheck &amp;&amp; npm run lint &amp;&amp; npm test   <span class="c"># all three must pass</span>
+npm run e2e                                        <span class="c"># for UI changes</span></pre>
+              <div class="key">
+                <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
+                <p class="en">
+                  "Done" has a written definition. Code without tests, or with a failing check,
+                  isn't done.
+                </p>
+                <p class="he">
+                  ל"סיימתי" יש הגדרה כתובה. קוד בלי בדיקות, או עם בדיקה שנכשלת, הוא לא גמור.
+                </p>
+              </div>
+              <label class="done-toggle"
+                ><input type="checkbox" id="done-l18" data-lesson="l18" /><span class="en"
+                  >Mark lesson as done</span
+                ><span class="he">סיימתי את השיעור</span></label
+              >
+            </div>
+          </article>
+        </section>
+
+        <!-- ===================== LIBRARY ===================== -->
+        <section id="library">
+          <div class="section-head">
+            <span class="eyebrow"
+              ><span class="en">Reference</span><span class="he">חומר עזר</span></span
+            >
+            <h2>
+              <span class="en">Technology library</span><span class="he">ספריית הטכנולוגיות</span>
+            </h2>
+            <p class="en">
+              Every tool and idea used in TaskForge. Read the short version, and open
+              <strong>Learn more</strong> when you want the details.
+            </p>
+            <p class="he">
+              כל כלי ורעיון שבהם השתמשנו ב-TaskForge. קראו את הגרסה הקצרה, ופתחו את
+              <strong>להרחבה</strong> כשרוצים את הפרטים.
+            </p>
+          </div>
+          <div class="lib-tools">
+            <div class="filters" role="group" aria-label="Filter technologies">
+              <button type="button" data-filter="all" aria-pressed="true">
+                <span class="en">All</span><span class="he">הכול</span>
+              </button>
+              <button type="button" data-filter="c-run" aria-pressed="false">
+                <span class="en">Language &amp; runtime</span
+                ><span class="he">שפה וסביבת ריצה</span>
+              </button>
+              <button type="button" data-filter="c-back" aria-pressed="false">
+                <span class="en">Backend</span><span class="he">שרת</span>
+              </button>
+              <button type="button" data-filter="c-front" aria-pressed="false">
+                <span class="en">Frontend</span><span class="he">ממשק</span>
+              </button>
+              <button type="button" data-filter="c-test" aria-pressed="false">
+                <span class="en">Testing</span><span class="he">בדיקות</span>
+              </button>
+              <button type="button" data-filter="c-tool" aria-pressed="false">
+                <span class="en">Tooling</span><span class="he">כלי עבודה</span>
+              </button>
+            </div>
+            <button type="button" class="btn" id="expand-all">
+              <span class="en">Expand all</span><span class="he">פתח הכול</span>
+            </button>
+          </div>
+
+          <div class="tech-grid" id="tech-grid">
+            <!-- Language & runtime -->
+            <article class="tech c-run" id="t-node">
+              <div class="tech-head">
+                <h3>Node.js</h3>
+                <span class="ver">v24</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Language &amp; runtime</span
+                ><span class="he">שפה וסביבת ריצה</span></span
+              >
+              <p class="short en">
+                A program that runs JavaScript outside the browser, on a server or your computer.
+              </p>
+              <p class="short he">תוכנה שמריצה JavaScript מחוץ לדפדפן, על שרת או על המחשב שלכם.</p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">runs the API, the seed script and every tool.</span
+                ><span class="he">מריץ את השרת, את סקריפט ה-seed ואת כל הכלים.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Node.js is built on V8, the JavaScript engine from Chrome. It handles many
+                    requests at once without threads, using an <strong>event loop</strong>: while it
+                    waits for a file or the network, it works on something else. Node 24 can also
+                    run <code>.ts</code> files directly by erasing the types, which is why
+                    development needs no build step (<code>node --watch server.ts</code>).
+                  </p>
+                  <p class="he">
+                    Node.js בנוי על V8, מנוע ה-JavaScript של Chrome. הוא מטפל בהרבה בקשות במקביל בלי
+                    threads, בעזרת <strong>event loop</strong>: בזמן שהוא מחכה לקובץ או לרשת, הוא
+                    עובד על משהו אחר. Node 24 יכול גם להריץ קבצי <code>.ts</code> ישירות על ידי
+                    מחיקת הטיפוסים, ולכן בפיתוח אין צורך בשלב build ‏(<code
+                      >node --watch server.ts</code
+                    >).
+                  </p>
+                  <p>
+                    <a href="https://nodejs.org/en/learn" target="_blank" rel="noopener"
+                      >nodejs.org/en/learn ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-run" id="t-ts">
+              <div class="tech-head">
+                <h3>TypeScript</h3>
+                <span class="ver">6.0.3</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Language &amp; runtime</span
+                ><span class="he">שפה וסביבת ריצה</span></span
+              >
+              <p class="short en">
+                JavaScript with types. It catches mistakes, like a missing field or a typo, before
+                the code runs.
+              </p>
+              <p class="short he">
+                JavaScript עם טיפוסים. היא תופסת טעויות, כמו שדה חסר או שגיאת כתיב, לפני שהקוד רץ.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">every file, in strict mode, with no <code>any</code>.</span
+                ><span class="he">כל קובץ, במצב strict, בלי <code>any</code>.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    You write <code>function get(id: string): Promise&lt;Project&gt;</code>, and the
+                    editor warns you if you pass a number or forget to handle <code>null</code>.
+                    <strong>Project references</strong> (<code>tsc -b</code>) build each package in
+                    order. Project rules: no <code>any</code> (use <code>unknown</code> and narrow
+                    it), no <code>@ts-ignore</code>, no <code>enum</code>, and
+                    <code>import type</code> for type-only imports.
+                  </p>
+                  <p class="he">
+                    כותבים <code>function get(id: string): Promise&lt;Project&gt;</code>, והעורך
+                    מזהיר אם מעבירים מספר או שוכחים לטפל ב-<code>null</code>.
+                    <strong>Project references</strong> ‏(<code>tsc -b</code>) בונים כל חבילה לפי
+                    הסדר. חוקי הפרויקט: בלי <code>any</code> (משתמשים ב-<code>unknown</code>
+                    ומצמצמים), בלי <code>@ts-ignore</code>, בלי <code>enum</code>, ו-<code
+                      >import type</code
+                    >
+                    לייבוא של טיפוסים בלבד.
+                  </p>
+                  <p>
+                    <a
+                      href="https://www.typescriptlang.org/docs/handbook/intro.html"
+                      target="_blank"
+                      rel="noopener"
+                      >TypeScript handbook ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-run" id="t-esm">
+              <div class="tech-head">
+                <h3>ES Modules</h3>
+                <span class="ver">"type": "module"</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Language &amp; runtime</span
+                ><span class="he">שפה וסביבת ריצה</span></span
+              >
+              <p class="short en">
+                The modern way to split JavaScript into files, using <code>import</code> and
+                <code>export</code>.
+              </p>
+              <p class="short he">
+                הדרך המודרנית לפצל JavaScript לקבצים, בעזרת
+                <code>import</code> ו-<code>export</code>.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">every package. Named exports only.</span
+                ><span class="he">כל החבילות. רק ייצוא בשם (named exports).</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Older Node code used <code>require()</code> (CommonJS). ESM is the standard that
+                    browsers and Node share. Relative imports include the extension, like
+                    <code>'./app.ts'</code>, and <code>tsc</code> rewrites it to
+                    <code>.js</code> when building. The project bans <code>export default</code>, so
+                    a name stays the same everywhere it's used.
+                  </p>
+                  <p class="he">
+                    קוד Node ישן השתמש ב-<code>require()</code> ‏(CommonJS). ‏ESM הוא התקן שמשותף
+                    לדפדפנים ול-Node. ייבוא יחסי כולל את הסיומת, למשל <code>'./app.ts'</code>,
+                    ו-<code>tsc</code> משנה אותה ל-<code>.js</code> בזמן build. הפרויקט אוסר
+                    <code>export default</code>, כדי ששם יישאר זהה בכל מקום שבו משתמשים בו.
+                  </p>
+                  <p>
+                    <a
+                      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules"
+                      target="_blank"
+                      rel="noopener"
+                      >MDN: JavaScript modules ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-run" id="t-workspaces">
+              <div class="tech-head">
+                <h3>npm workspaces</h3>
+                <span class="ver">monorepo</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Language &amp; runtime</span
+                ><span class="he">שפה וסביבת ריצה</span></span
+              >
+              <p class="short en">
+                Lets one repository hold several packages that import each other by name.
+              </p>
+              <p class="short he">
+                מאפשר לריפוזיטורי אחד להחזיק כמה חבילות שמייבאות זו את זו לפי שם.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>shared</code>, <code>storage</code>, <code>api</code>, <code>client</code>.
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    One <code>npm install</code> at the root installs everything and creates links
+                    in <code>node_modules/@taskforge/</code>. Run a script in one package with
+                    <code>-w</code>, like <code>npm run dev -w @taskforge/client</code>. Each
+                    package's <code>exports</code> field has a special
+                    <code>@taskforge/source</code> condition that points to the
+                    <code>.ts</code> source, so dev mode and Vite never need a build first.
+                  </p>
+                  <p class="he">
+                    <code>npm install</code> אחד בשורש מתקין הכול ויוצר קישורים
+                    ב-<code>node_modules/@taskforge/</code>. מריצים סקריפט בחבילה אחת עם
+                    <code>-w</code>, למשל <code>npm run dev -w @taskforge/client</code>. לשדה
+                    <code>exports</code> של כל חבילה יש תנאי מיוחד, <code>@taskforge/source</code>,
+                    שמצביע על קוד המקור ב-<code>.ts</code>, כך שמצב פיתוח ו-Vite אף פעם לא צריכים
+                    build קודם.
+                  </p>
+                  <p>
+                    <a
+                      href="https://docs.npmjs.com/cli/using-npm/workspaces"
+                      target="_blank"
+                      rel="noopener"
+                      >npm docs: workspaces ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <!-- Backend -->
+            <article class="tech c-back" id="t-rest">
+              <div class="tech-head">
+                <h3>REST &amp; HTTP</h3>
+                <span class="ver"><span class="en">concept</span><span class="he">מושג</span></span>
+              </div>
+              <span class="cat"><span class="en">Backend</span><span class="he">שרת</span></span>
+              <p class="short en">
+                A simple style for APIs: URLs name things, and HTTP verbs (GET, POST, PATCH, PUT,
+                DELETE) say what to do with them.
+              </p>
+              <p class="short he">
+                סגנון פשוט ל-API: כתובות מתארות דברים, ופעלים של HTTP ‏(GET, POST, PATCH, PUT,
+                DELETE) אומרים מה לעשות איתם.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">12 endpoints under <code>/projects</code>.</span
+                ><span class="he">‏12 נקודות קצה תחת <code>/projects</code>.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    The <strong>status code</strong> tells the client what happened:
+                    <code>200</code> OK, <code>201</code> created, <code>204</code> deleted (no
+                    body), <code>400</code> bad input, <code>404</code> not found,
+                    <code>409</code> conflict (duplicate name), <code>500</code> server bug. Issues
+                    are <strong>nested</strong> under their project
+                    (<code>/projects/:id/issues</code>), so an issue from another project returns
+                    404.
+                  </p>
+                  <p class="he">
+                    <strong>קוד הסטטוס</strong> אומר ללקוח מה קרה: <code>200</code> תקין,
+                    <code>201</code> נוצר, <code>204</code> נמחק (בלי גוף), <code>400</code> קלט
+                    שגוי, <code>404</code> לא נמצא, <code>409</code> התנגשות (שם כפול),
+                    <code>500</code> באג בשרת. סוגיות <strong>מקוננות</strong> תחת הפרויקט שלהן
+                    (<code>/projects/:id/issues</code>), כך שסוגיה מפרויקט אחר מחזירה 404.
+                  </p>
+                  <p>
+                    <a
+                      href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview"
+                      target="_blank"
+                      rel="noopener"
+                      >MDN: HTTP overview ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-back" id="t-express">
+              <div class="tech-head">
+                <h3>Express</h3>
+                <span class="ver">5.3.0</span>
+              </div>
+              <span class="cat"><span class="en">Backend</span><span class="he">שרת</span></span>
+              <p class="short en">
+                The most popular Node.js web framework. You tell it "when a request comes to this
+                URL, run this function".
+              </p>
+              <p class="short he">
+                ה-framework הפופולרי ביותר לווב ב-Node.js. אומרים לו "כשמגיעה בקשה לכתובת הזאת, תריץ
+                את הפונקציה הזאת".
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>createApp()</code>, <span class="en">routes and middleware.</span
+                ><span class="he">‏routes ו-middleware.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    An Express app is a chain of <strong>middleware</strong>. Each one gets
+                    <code>(req, res, next)</code> and either answers or passes the request along.
+                    Version 5 matters here: when an <code>async</code> route throws or its promise
+                    rejects, Express 5 sends the error to the error handler on its own. Express 4
+                    needed wrapper code for that.
+                  </p>
+                  <p class="he">
+                    אפליקציית Express היא שרשרת של <strong>middleware</strong>. כל אחד מקבל
+                    <code>(req, res, next)</code> ואו שעונה, או שמעביר את הבקשה הלאה. גרסה 5 חשובה
+                    כאן: כש-route מסוג <code>async</code> זורק שגיאה או שה-promise שלו נכשל, Express
+                    5 שולח את השגיאה ל-error handler בעצמו. ב-Express 4 היה צריך קוד עטיפה בשביל זה.
+                  </p>
+                  <p>
+                    <a href="https://expressjs.com/" target="_blank" rel="noopener"
+                      >expressjs.com ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-back" id="t-zod">
+              <div class="tech-head">
+                <h3>zod</h3>
+                <span class="ver">4.6.5</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Backend + frontend</span><span class="he">שרת + ממשק</span></span
+              >
+              <p class="short en">
+                Describes what valid data looks like, then checks real data against it at runtime.
+              </p>
+              <p class="short he">מתאר איך נראה מידע תקין, ואז בודק מולו מידע אמיתי בזמן ריצה.</p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en"
+                  >request bodies, URL params and list queries, shared with the client.</span
+                ><span class="he">גוף הבקשות, פרמטרים ב-URL ושאילתות רשימה, משותף עם הלקוח.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    You define a schema once, and zod gives you both a validator and a TypeScript
+                    type (<code>z.output&lt;typeof schema&gt;</code>), so they can't drift apart.
+                    Schemas can also transform data: <code>.trim().normalize('NFC')</code> cleans
+                    text before it's saved. <code>z.strictObject</code> rejects unknown fields, so a
+                    client can't send its own <code>id</code>.
+                  </p>
+                  <p class="he">
+                    מגדירים סכמה פעם אחת, ו-zod נותן גם בודק וגם טיפוס TypeScript ‏(<code
+                      >z.output&lt;typeof schema&gt;</code
+                    >), כך שהם לא יכולים להתרחק זה מזה. סכמות יכולות גם לשנות מידע:
+                    <code>.trim().normalize('NFC')</code> מנקה טקסט לפני שהוא נשמר.
+                    <code>z.strictObject</code> דוחה שדות לא מוכרים, כך שלקוח לא יכול לשלוח
+                    <code>id</code> משלו.
+                  </p>
+                  <p><a href="https://zod.dev/" target="_blank" rel="noopener">zod.dev ↗</a></p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-back" id="t-repo">
+              <div class="tech-head">
+                <h3>
+                  <span class="en">Repository pattern</span><span class="he">תבנית Repository</span>
+                </h3>
+                <span class="ver"><span class="en">concept</span><span class="he">מושג</span></span>
+              </div>
+              <span class="cat"><span class="en">Backend</span><span class="he">שרת</span></span>
+              <p class="short en">
+                Hide the storage details behind a simple interface like "find", "create" and
+                "delete".
+              </p>
+              <p class="short he">
+                מסתירים את פרטי האחסון מאחורי ממשק פשוט כמו "מצא", "צור" ו"מחק".
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>ProjectRepository</code>, <code>IssueRepository</code>
+                <span class="en">with in-memory and JSON versions.</span
+                ><span class="he">עם גרסת זיכרון וגרסת JSON.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    The services don't know whether data lives in memory, a file or a SQL database.
+                    Every method is <code>async</code>, so a database version can drop in later.
+                    Filtering, sorting and paging happen inside the repository, so a SQL version
+                    could turn them into a query. The <strong>contract test suites</strong> in
+                    <code>@taskforge/storage/testing</code> prove every version behaves the same.
+                  </p>
+                  <p class="he">
+                    ה-services לא יודעים אם המידע נמצא בזיכרון, בקובץ או במסד נתונים SQL. כל מתודה
+                    היא <code>async</code>, כך שגרסת מסד נתונים יכולה להיכנס בעתיד. סינון, מיון
+                    ועימוד קורים בתוך ה-repository, כך שגרסת SQL יכולה להפוך אותם לשאילתה.
+                    <strong>סטי בדיקות החוזה</strong> ב-<code>@taskforge/storage/testing</code>
+                    מוכיחים שכל הגרסאות מתנהגות אותו דבר.
+                  </p>
+                  <p>
+                    <a
+                      href="https://martinfowler.com/eaaCatalog/repository.html"
+                      target="_blank"
+                      rel="noopener"
+                      >Martin Fowler: Repository ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-back" id="t-json">
+              <div class="tech-head">
+                <h3>
+                  <span class="en">JSON file storage</span><span class="he">אחסון בקובץ JSON</span>
+                </h3>
+                <span class="ver">version: 1</span>
+              </div>
+              <span class="cat"><span class="en">Backend</span><span class="he">שרת</span></span>
+              <p class="short en">
+                All data lives in one UTF-8 text file. It's simple, easy to read, and needs no
+                database server.
+              </p>
+              <p class="short he">
+                כל המידע נמצא בקובץ טקסט אחד בקידוד UTF-8. פשוט, קל לקריאה, ולא צריך שרת מסד נתונים.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>server/api/data/taskforge.json</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    The file is <code>{ version: 1, projects, issues, issueCounters }</code>.
+                    <code>JsonFileStore</code> loads it once into memory. Each write runs alone in a
+                    queue, changes a copy, writes <code>.tmp</code>, then renames it. If anything
+                    fails, both the file and memory stay unchanged. Changing the file's shape
+                    requires bumping <code>version</code> and adding a migration with tests.
+                  </p>
+                  <p class="he">
+                    הקובץ הוא <code>{ version: 1, projects, issues, issueCounters }</code>. ‏<code
+                      >JsonFileStore</code
+                    >
+                    טוען אותו פעם אחת לזיכרון. כל כתיבה רצה לבד בתור, משנה עותק, כותבת
+                    <code>.tmp</code> ואז משנה את שמו. אם משהו נכשל, גם הקובץ וגם הזיכרון נשארים ללא
+                    שינוי. שינוי במבנה הקובץ מחייב להעלות את <code>version</code> ולהוסיף migration
+                    עם בדיקות.
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-back" id="t-di">
+              <div class="tech-head">
+                <h3>Dependency injection</h3>
+                <span class="ver"><span class="en">concept</span><span class="he">מושג</span></span>
+              </div>
+              <span class="cat"><span class="en">Backend</span><span class="he">שרת</span></span>
+              <p class="short en">
+                Instead of creating its own tools, a piece of code receives them from outside.
+              </p>
+              <p class="short he">במקום ליצור לעצמה את הכלים, יחידת קוד מקבלת אותם מבחוץ.</p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>createApp({ projects, issues, idGen, clock })</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    In production, <code>server.ts</code> passes JSON repositories,
+                    <code>randomUUID</code> and the real clock. In tests we pass in-memory
+                    repositories, an ID generator that returns <code>id-1</code>, <code>id-2</code>…
+                    and a frozen clock. The same code runs in both cases, but the tests get exact,
+                    repeatable results.
+                  </p>
+                  <p class="he">
+                    בייצור, <code>server.ts</code> מעביר repositories של JSON, את
+                    <code>randomUUID</code> ואת השעון האמיתי. בבדיקות מעבירים repositories של
+                    זיכרון, מחולל מזהים שמחזיר <code>id-1</code>, <code>id-2</code>… ושעון קפוא.
+                    אותו קוד רץ בשני המקרים, אבל הבדיקות מקבלות תוצאות מדויקות וחוזרות.
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-back" id="t-intl">
+              <div class="tech-head">
+                <h3>Unicode &amp; Intl</h3>
+                <span class="ver">NFC · Intl.Collator</span>
+              </div>
+              <span class="cat"><span class="en">Backend</span><span class="he">שרת</span></span>
+              <p class="short en">
+                Built-in JavaScript tools for handling text in any language correctly.
+              </p>
+              <p class="short he">כלים מובנים ב-JavaScript לטיפול נכון בטקסט בכל שפה.</p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">Hebrew names, nikud, emoji, sorting.</span
+                ><span class="he">שמות בעברית, ניקוד, אימוג'י, מיון.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <ul class="en">
+                    <li>
+                      <strong>NFC normalization</strong>: the same visible letter can be stored as
+                      different bytes. <code>str.normalize('NFC')</code> picks one form, so
+                      "שָׁלוֹם" typed on two keyboards matches.
+                    </li>
+                    <li>
+                      <strong>Code points</strong>: <code>"😀".length</code> is 2 in JavaScript.
+                      <code>Array.from(str).length</code> counts real characters, so limits are
+                      fair.
+                    </li>
+                    <li>
+                      <strong>Intl.Collator(['he','en'])</strong>: sorts Hebrew and English words in
+                      the order people expect.
+                    </li>
+                  </ul>
+                  <ul class="he">
+                    <li>
+                      <strong>נרמול NFC</strong>: אותה אות שנראית זהה יכולה להישמר בבתים שונים.
+                      <code>str.normalize('NFC')</code> בוחר צורה אחת, כך ש"שָׁלוֹם" שהוקלד בשתי
+                      מקלדות זהה.
+                    </li>
+                    <li>
+                      <strong>Code points</strong>: ב-JavaScript ‏<code>"😀".length</code> שווה 2.
+                      ‏<code>Array.from(str).length</code> סופר תווים אמיתיים, כך שהמגבלות הוגנות.
+                    </li>
+                    <li>
+                      <strong>Intl.Collator(['he','en'])</strong>: ממיין מילים בעברית ובאנגלית בסדר
+                      שאנשים מצפים לו.
+                    </li>
+                  </ul>
+                  <p>
+                    <a
+                      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator"
+                      target="_blank"
+                      rel="noopener"
+                      >MDN: Intl.Collator ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <!-- Frontend -->
+            <article class="tech c-front" id="t-react">
+              <div class="tech-head">
+                <h3>React</h3>
+                <span class="ver">19.3.0</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                A library for building user interfaces from small, reusable
+                <strong>components</strong>.
+              </p>
+              <p class="short he">
+                ספרייה לבניית ממשקי משתמש מ<strong>קומפוננטות</strong> קטנות שאפשר לעשות בהן שימוש
+                חוזר.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">the whole web UI, in <code>client/src</code>.</span
+                ><span class="he">כל ממשק הווב, בתיקייה <code>client/src</code>.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    A component is a function that returns what the screen should look like (JSX).
+                    When its data changes, React updates only the parts that changed.
+                    <strong>Hooks</strong> such as <code>useState</code>, <code>useEffect</code> and
+                    our own <code>useHotkeys</code> and <code>useIssueViewState</code> let
+                    components keep state and react to events. The ESLint plugin
+                    <code>react-hooks</code> checks that hooks are used correctly.
+                  </p>
+                  <p class="he">
+                    קומפוננטה היא פונקציה שמחזירה איך המסך צריך להיראות (JSX). כשהמידע שלה משתנה,
+                    React מעדכן רק את החלקים שהשתנו. <strong>Hooks</strong> כמו
+                    <code>useState</code>, <code>useEffect</code> וה-hooks שלנו,
+                    <code>useHotkeys</code> ו-<code>useIssueViewState</code>, מאפשרים לקומפוננטות
+                    לשמור מצב ולהגיב לאירועים. התוסף <code>react-hooks</code> של ESLint בודק
+                    שמשתמשים ב-hooks נכון.
+                  </p>
+                  <p>
+                    <a href="https://react.dev/learn" target="_blank" rel="noopener"
+                      >react.dev/learn ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-vite">
+              <div class="tech-head">
+                <h3>Vite</h3>
+                <span class="ver">8.3.4</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                A fast development server and build tool for web apps. Save a file and the browser
+                updates instantly.
+              </p>
+              <p class="short he">
+                שרת פיתוח וכלי build מהיר לאפליקציות ווב. שומרים קובץ והדפדפן מתעדכן מיד.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en"
+                  >serves the UI on :5173 and proxies <code>/api</code> to :3000.</span
+                ><span class="he"
+                  >מגיש את הממשק בפורט 5173 ומעביר את <code>/api</code> לפורט 3000.</span
+                >
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    In development, Vite serves your source files almost as they are, and the
+                    browser loads them as ES modules, so start-up is fast.
+                    <strong>Hot Module Replacement</strong> swaps a changed component without losing
+                    page state. <code>npm run build</code> bundles and minifies everything for
+                    production. The <code>proxy</code> setting in
+                    <code>vite.config.ts</code> forwards <code>/api/*</code> to the API and strips
+                    the <code>/api</code> prefix.
+                  </p>
+                  <p class="he">
+                    בפיתוח, Vite מגיש את קבצי המקור כמעט כמו שהם, והדפדפן טוען אותם כמודולי ES, ולכן
+                    ההפעלה מהירה. <strong>Hot Module Replacement</strong> מחליף קומפוננטה שהשתנתה
+                    בלי לאבד את מצב הדף. <code>npm run build</code> אורז ומכווץ הכול לייצור. ההגדרה
+                    <code>proxy</code> בקובץ <code>vite.config.ts</code> מעבירה את
+                    <code>/api/*</code> לשרת ומורידה את התחילית <code>/api</code>.
+                  </p>
+                  <p>
+                    <a href="https://vite.dev/guide/" target="_blank" rel="noopener"
+                      >vite.dev/guide ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-router">
+              <div class="tech-head">
+                <h3>React Router</h3>
+                <span class="ver">7.18.4</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                Connects URLs to screens, so each page of the app has its own address.
+              </p>
+              <p class="short he">מחבר בין כתובות למסכים, כך שלכל עמוד באפליקציה יש כתובת משלו.</p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>/p/:projectId</code>, <code>/p/:projectId/i/:issueId</code>,
+                <span class="en">and the filter query string.</span
+                ><span class="he">ומחרוזת הפילטרים ב-URL.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    The router reads the URL and shows the right view, without reloading the page.
+                    <code>useSearchParams</code> reads and writes <code>?status=…&amp;page=…</code>,
+                    which is how the issues table stores its state. Lesson 16 shows a real fix:
+                    using the DOM <code>RouterProvider</code> so updates made with
+                    <code>flushSync</code> apply immediately and controls don't flicker.
+                  </p>
+                  <p class="he">
+                    ה-router קורא את ה-URL ומציג את התצוגה הנכונה, בלי לטעון את הדף מחדש.
+                    <code>useSearchParams</code> קורא וכותב את <code>?status=…&amp;page=…</code>,
+                    וכך טבלת הסוגיות שומרת את המצב שלה. שיעור 16 מראה תיקון אמיתי: מעבר ל-<code
+                      >RouterProvider</code
+                    >
+                    של DOM, כדי שעדכונים עם <code>flushSync</code> ייכנסו מיד והפקדים לא יהבהבו.
+                  </p>
+                  <p>
+                    <a href="https://reactrouter.com/" target="_blank" rel="noopener"
+                      >reactrouter.com ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-query">
+              <div class="tech-head">
+                <h3>TanStack Query</h3>
+                <span class="ver">5.104.1</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                Fetches server data, caches it, and keeps it fresh, so components just ask for data
+                and get it.
+              </p>
+              <p class="short he">
+                מביא מידע מהשרת, שומר אותו במטמון ושומר שיהיה עדכני, כך שקומפוננטות פשוט מבקשות מידע
+                ומקבלות.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>useProjects</code>, <code>useIssues</code>, <code>usePatchIssue</code>
+                <span class="en">and the <code>keys.ts</code> factory.</span
+                ><span class="he">ומפעל המפתחות <code>keys.ts</code>.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Each piece of data has a <strong>query key</strong>, like
+                    <code>['issues', projectId, 'list', params]</code>. Two components that use the
+                    same key share one request and one cache entry.
+                    <strong>Mutations</strong> change data. After a change we
+                    <em>invalidate</em> related keys so they refetch. <code>onMutate</code> and
+                    <code>onError</code> make optimistic updates with rollback possible (lesson 14).
+                  </p>
+                  <p class="he">
+                    לכל פיסת מידע יש <strong>מפתח שאילתה</strong>, למשל
+                    <code>['issues', projectId, 'list', params]</code>. שתי קומפוננטות עם אותו מפתח
+                    חולקות בקשה אחת ורשומת מטמון אחת. <strong>Mutations</strong> משנות מידע. אחרי
+                    שינוי עושים <em>invalidate</em> למפתחות קשורים כדי שייטענו מחדש.
+                    <code>onMutate</code> ו-<code>onError</code> מאפשרים עדכונים אופטימיים עם ביטול
+                    (שיעור 14).
+                  </p>
+                  <p>
+                    <a href="https://tanstack.com/query/latest" target="_blank" rel="noopener"
+                      >tanstack.com/query ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-table">
+              <div class="tech-head">
+                <h3>TanStack Table</h3>
+                <span class="ver">8.21.3</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                A "headless" table engine. It handles columns, sorting and visibility, and you write
+                all the HTML and CSS.
+              </p>
+              <p class="short he">
+                מנוע טבלאות "ללא ראש" (headless). הוא מטפל בעמודות, במיון ובהצגה, ואתם כותבים את כל
+                ה-HTML וה-CSS.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>IssueTable.tsx</code>, <code>columns.ts</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    "Headless" means the library gives you logic and state, not looks. That's how
+                    the table can follow <code>DESIGN.md</code> exactly. TaskForge uses
+                    <strong>manual sorting</strong>: the table doesn't sort rows itself, it tells
+                    the URL the new sort, and the API returns rows already sorted.
+                  </p>
+                  <p class="he">
+                    "Headless" פירושו שהספרייה נותנת לוגיקה ומצב, ולא מראה. כך הטבלה יכולה לעקוב
+                    בדיוק אחרי <code>DESIGN.md</code>. ‏TaskForge משתמשת ב<strong>מיון ידני</strong
+                    >: הטבלה לא ממיינת שורות בעצמה, היא מעדכנת את ה-URL במיון החדש, והשרת מחזיר
+                    שורות שכבר ממוינות.
+                  </p>
+                  <p>
+                    <a href="https://tanstack.com/table/latest" target="_blank" rel="noopener"
+                      >tanstack.com/table ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-radix">
+              <div class="tech-head">
+                <h3>Radix UI</h3>
+                <span class="ver">primitives</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                Accessible building blocks with no styling: dialogs, menus, selects and tooltips
+                that work with keyboard and screen readers.
+              </p>
+              <p class="short he">
+                אבני בניין נגישות בלי עיצוב: חלונות, תפריטים, רשימות בחירה ו-tooltips שעובדים עם
+                מקלדת וקוראי מסך.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en"
+                  >Dialog, AlertDialog, DropdownMenu, Select, Popover, Tooltip, Toast,
+                  VisuallyHidden.</span
+                ><span class="he"
+                  >‏Dialog, ‏AlertDialog, ‏DropdownMenu, ‏Select, ‏Popover, ‏Tooltip, ‏Toast,
+                  ‏VisuallyHidden.</span
+                >
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    A good dialog must trap focus inside, return focus when it closes, close on
+                    <kbd>Esc</kbd>, and announce itself to screen readers. A good menu supports the
+                    arrow keys and type-ahead. Radix does all of this, and TaskForge adds only CSS
+                    Modules on top. Project rule: never hand-roll focus traps or menus.
+                  </p>
+                  <p class="he">
+                    חלון טוב חייב ללכוד את הפוקוס בתוכו, להחזיר את הפוקוס כשהוא נסגר, להיסגר ב-<kbd
+                      >Esc</kbd
+                    >
+                    ולהכריז על עצמו לקוראי מסך. תפריט טוב תומך בחיצים ובחיפוש בהקלדה. ‏Radix עושה את
+                    כל זה, ו-TaskForge רק מוסיפה מעל CSS Modules. חוק בפרויקט: אף פעם לא כותבים לבד
+                    לכידת פוקוס או תפריטים.
+                  </p>
+                  <p>
+                    <a href="https://www.radix-ui.com/primitives" target="_blank" rel="noopener"
+                      >radix-ui.com/primitives ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-css">
+              <div class="tech-head">
+                <h3>CSS Modules &amp; tokens</h3>
+                <span class="ver">*.module.css</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                Each component has its own CSS file whose class names can't clash with other files.
+                All values come from shared tokens.
+              </p>
+              <p class="short he">
+                לכל קומפוננטה יש קובץ CSS משלה, ושמות המחלקות בו לא יכולים להתנגש עם קבצים אחרים. כל
+                הערכים מגיעים מטוקנים משותפים.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>IssueTable.module.css</code> + <code>tokens.css</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Vite renames <code>.row</code> to something unique like <code>_row_x7f2a</code>,
+                    so styles stay local. Tokens such as <code>--paper</code>,
+                    <code>--s-4</code> (16px) and <code>--dur-1</code> (120ms) keep the whole app
+                    consistent. <strong>Container queries</strong> let the issues table change its
+                    layout based on its own width, so opening the side panel adapts it too. The tiny
+                    <code>clsx</code> helper joins class names conditionally.
+                  </p>
+                  <p class="he">
+                    ‏Vite משנה את השם <code>.row</code> לשם ייחודי כמו <code>_row_x7f2a</code>, כך
+                    שהעיצוב נשאר מקומי. טוקנים כמו <code>--paper</code>, ‏<code>--s-4</code> ‏(16px)
+                    ו-<code>--dur-1</code> ‏(120ms) שומרים על אחידות בכל האפליקציה.
+                    <strong>Container queries</strong> מאפשרות לטבלת הסוגיות לשנות פריסה לפי הרוחב
+                    שלה עצמה, כך שגם פתיחת הפאנל הצדדי משנה אותה. העוזר הקטן <code>clsx</code> מחבר
+                    שמות מחלקות לפי תנאי.
+                  </p>
+                  <p>
+                    <a
+                      href="https://github.com/css-modules/css-modules"
+                      target="_blank"
+                      rel="noopener"
+                      >CSS Modules ↗</a
+                    >
+                    ·
+                    <a
+                      href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries"
+                      target="_blank"
+                      rel="noopener"
+                      >MDN: container queries ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-front" id="t-fonts">
+              <div class="tech-head">
+                <h3>IBM Plex · Fontsource</h3>
+                <span class="ver">5.3.0</span>
+              </div>
+              <span class="cat"><span class="en">Frontend</span><span class="he">ממשק</span></span>
+              <p class="short en">
+                The app's typefaces, installed as npm packages so they load from your own server.
+              </p>
+              <p class="short he">
+                הגופנים של האפליקציה, מותקנים כחבילות npm כך שהם נטענים מהשרת שלכם.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">Plex Sans for UI, Plex Mono for numbers, dates and keys.</span
+                ><span class="he">‏Plex Sans לממשק, ‏Plex Mono למספרים, תאריכים ומקשים.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Fontsource packages Google-style fonts for npm, so there's no request to an
+                    outside font host. A mono face with <strong>tabular numbers</strong> makes issue
+                    numbers and counts line up in columns. Hebrew text falls back to the system's
+                    Hebrew font, and user text renders with <code>dir="auto"</code>, so a Hebrew
+                    title displays right-to-left on its own.
+                  </p>
+                  <p class="he">
+                    ‏Fontsource אורז גופנים בסגנון Google ל-npm, כך שאין בקשה לשרת גופנים חיצוני.
+                    גופן mono עם <strong>ספרות טבלאיות</strong> מיישר מספרי סוגיות וספירות בעמודות.
+                    טקסט בעברית נופל לגופן העברי של המערכת, וטקסט של משתמשים מוצג עם
+                    <code>dir="auto"</code>, כך שכותרת בעברית מוצגת מימין לשמאל בעצמה.
+                  </p>
+                  <p>
+                    <a href="https://fontsource.org/" target="_blank" rel="noopener"
+                      >fontsource.org ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <!-- Testing -->
+            <article class="tech c-test" id="t-vitest">
+              <div class="tech-head">
+                <h3>Vitest</h3>
+                <span class="ver">5.0.3</span>
+              </div>
+              <span class="cat"><span class="en">Testing</span><span class="he">בדיקות</span></span>
+              <p class="short en">
+                A fast test runner. You write <code>expect(result).toBe(…)</code> and it tells you
+                what passed and what broke.
+              </p>
+              <p class="short he">
+                מריץ בדיקות מהיר. כותבים <code>expect(result).toBe(…)</code> והוא אומר מה עבר ומה
+                נשבר.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">unit, contract and integration tests in all 4 packages.</span
+                ><span class="he">בדיקות יחידה, חוזה ואינטגרציה בכל 4 החבילות.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    The root <code>vitest.config.ts</code> defines one <strong>project</strong> per
+                    package, so <code>npm test</code> runs everything and
+                    <code>npx vitest run --project api</code> runs one.
+                    <code>npm run test:watch</code> reruns tests when you save.
+                    <code>@vitest/coverage-v8</code> reports which lines the tests touched, with a
+                    target of at least 90% on shared, storage and services.
+                  </p>
+                  <p class="he">
+                    הקובץ <code>vitest.config.ts</code> בשורש מגדיר <strong>project</strong> לכל
+                    חבילה, כך ש-<code>npm test</code> מריץ הכול ו-<code
+                      >npx vitest run --project api</code
+                    >
+                    מריץ חבילה אחת. <code>npm run test:watch</code> מריץ מחדש בכל שמירה.
+                    <code>@vitest/coverage-v8</code> מדווח אילו שורות הבדיקות נגעו בהן, עם יעד של
+                    90% לפחות ב-shared, ב-storage וב-services.
+                  </p>
+                  <p>
+                    <a href="https://vitest.dev/guide/" target="_blank" rel="noopener"
+                      >vitest.dev ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-test" id="t-supertest">
+              <div class="tech-head">
+                <h3>Supertest</h3>
+                <span class="ver">7.3.1</span>
+              </div>
+              <span class="cat"><span class="en">Testing</span><span class="he">בדיקות</span></span>
+              <p class="short en">
+                Sends fake HTTP requests to an Express app inside a test, without starting a real
+                server.
+              </p>
+              <p class="short he">
+                שולח בקשות HTTP מדומות לאפליקציית Express מתוך בדיקה, בלי להפעיל שרת אמיתי.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>server/api/tests/integration/*.test.ts</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <pre
+                    class="code"
+                  ><span class="k">const</span> res = <span class="k">await</span> request(createApp(deps))
+  .post(<span class="s">'/projects'</span>).set(<span class="s">'Accept-Language'</span>, <span class="s">'he'</span>)
+  .send({ name: <span class="s">''</span> });
+expect(res.status).toBe(400);
+expect(res.body.error.code).toBe(<span class="s">'VALIDATION_ERROR'</span>);</pre>
+                  <p class="en">
+                    Because <code>createApp</code> never calls <code>listen()</code>, Supertest can
+                    test the whole HTTP stack (routing, middleware, JSON, status codes) quickly and
+                    in isolation.
+                  </p>
+                  <p class="he">
+                    מכיוון ש-<code>createApp</code> אף פעם לא קורא ל-<code>listen()</code>,
+                    ‏Supertest יכול לבדוק את כל שכבת ה-HTTP (ניתוב, middleware, ‏JSON, קודי סטטוס)
+                    מהר ובבידוד.
+                  </p>
+                  <p>
+                    <a href="https://github.com/ladjs/supertest" target="_blank" rel="noopener"
+                      >github.com/ladjs/supertest ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-test" id="t-playwright">
+              <div class="tech-head">
+                <h3>Playwright</h3>
+                <span class="ver">1.64.0</span>
+              </div>
+              <span class="cat"><span class="en">Testing</span><span class="he">בדיקות</span></span>
+              <p class="short en">
+                Controls a real browser from code: it clicks, types and checks what's on screen, the
+                way a user would.
+              </p>
+              <p class="short he">
+                שולט בדפדפן אמיתי מתוך קוד: לוחץ, מקליד ובודק מה מופיע על המסך, כמו שמשתמש היה עושה.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>client/e2e/*.spec.ts</code>, <code>npm run e2e</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Tests find elements the way people do, by role and name:
+                    <code>page.getByRole('button', { name: 'New issue' })</code>. Playwright waits
+                    automatically until things appear, so tests aren't flaky.
+                    <code>playwright.config.ts</code> starts the API and Vite on their own ports
+                    with a throw-away data file. Run
+                    <code>npx playwright install chromium</code> once first.
+                  </p>
+                  <p class="he">
+                    הבדיקות מוצאות אלמנטים כמו שאנשים מוצאים, לפי תפקיד ושם:
+                    <code>page.getByRole('button', { name: 'New issue' })</code>. ‏Playwright מחכה
+                    אוטומטית עד שדברים מופיעים, כך שהבדיקות יציבות.
+                    <code>playwright.config.ts</code> מפעיל את השרת ואת Vite בפורטים משלהם עם קובץ
+                    נתונים זמני. בפעם הראשונה מריצים <code>npx playwright install chromium</code>.
+                  </p>
+                  <p>
+                    <a href="https://playwright.dev/docs/intro" target="_blank" rel="noopener"
+                      >playwright.dev ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <!-- Tooling -->
+            <article class="tech c-tool" id="t-eslint">
+              <div class="tech-head">
+                <h3>ESLint + typescript-eslint</h3>
+                <span class="ver">10.12.0 · 8.71.1</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Tooling</span><span class="he">כלי עבודה</span></span
+              >
+              <p class="short en">
+                Reads your code and warns about bugs and bad patterns, like using
+                <code>any</code> or forgetting to await a promise.
+              </p>
+              <p class="short he">
+                קורא את הקוד ומזהיר על באגים ותבניות גרועות, כמו שימוש ב-<code>any</code> או שכחה
+                לחכות ל-promise.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>eslint.config.js</code>, <code>npm run lint</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    ESLint 10 uses a "flat config", a single JavaScript file that lists rule sets.
+                    <code>typescript-eslint</code> adds rules that understand types, and
+                    <code>eslint-plugin-react-hooks</code> checks hook rules in the client.
+                    <code>eslint-config-prettier</code> turns off style rules so ESLint and Prettier
+                    never fight.
+                  </p>
+                  <p class="he">
+                    ‏ESLint 10 משתמש ב-"flat config", קובץ JavaScript אחד שמונה סטים של חוקים.
+                    ‏<code>typescript-eslint</code> מוסיף חוקים שמבינים טיפוסים, ו-<code
+                      >eslint-plugin-react-hooks</code
+                    >
+                    בודק את חוקי ה-hooks בלקוח. ‏<code>eslint-config-prettier</code> מכבה חוקי סגנון
+                    כדי ש-ESLint ו-Prettier לא יריבו.
+                  </p>
+                  <p>
+                    <a href="https://eslint.org/docs/latest/" target="_blank" rel="noopener"
+                      >eslint.org ↗</a
+                    >
+                    ·
+                    <a href="https://typescript-eslint.io/" target="_blank" rel="noopener"
+                      >typescript-eslint.io ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-tool" id="t-prettier">
+              <div class="tech-head">
+                <h3>Prettier</h3>
+                <span class="ver">3.9.9</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Tooling</span><span class="he">כלי עבודה</span></span
+              >
+              <p class="short en">
+                Formats code automatically: spaces, quotes, line breaks. No more style arguments.
+              </p>
+              <p class="short he">
+                מעצב קוד אוטומטית: רווחים, מרכאות, שבירות שורה. אין יותר ויכוחים על סגנון.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <code>.prettierrc</code>, <code>npm run format</code>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Prettier rewrites files into one consistent style.
+                    <code>npm run format:check</code> only checks, which is useful in CI. Together
+                    with <code>.editorconfig</code> (UTF-8, LF line endings) and
+                    <code>.gitattributes</code>, every file looks the same on Windows, Mac and
+                    Linux.
+                  </p>
+                  <p class="he">
+                    ‏Prettier כותב מחדש קבצים בסגנון אחיד אחד. ‏<code>npm run format:check</code> רק
+                    בודק, וזה שימושי ב-CI. יחד עם <code>.editorconfig</code> ‏(UTF-8, סופי שורה LF)
+                    ו-<code>.gitattributes</code>, כל קובץ נראה אותו דבר ב-Windows, ב-Mac וב-Linux.
+                  </p>
+                  <p>
+                    <a href="https://prettier.io/docs/" target="_blank" rel="noopener"
+                      >prettier.io ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-tool" id="t-git">
+              <div class="tech-head">
+                <h3>Git &amp; GitHub</h3>
+                <span class="ver">36 commits · PR #1</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Tooling</span><span class="he">כלי עבודה</span></span
+              >
+              <p class="short en">
+                Git saves every version of the code. GitHub hosts it online and lets you review
+                changes in Pull Requests.
+              </p>
+              <p class="short he">
+                ‏Git שומר כל גרסה של הקוד. ‏GitHub מאחסן אותו ברשת ומאפשר לסקור שינויים ב-Pull
+                Requests.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en">small commits, a feature branch for the UI, one PR.</span
+                ><span class="he">קומיטים קטנים, ענף פיצ'ר לממשק, PR אחד.</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    Commit messages follow <strong>Conventional Commits</strong>:
+                    <code>feat(api): …</code> for a new feature, <code>fix(client): …</code> for a
+                    bug fix, <code>docs:</code>, <code>chore:</code> and <code>test(e2e):</code>.
+                    The part in brackets names the package. Try <code>git log --oneline</code> to
+                    read this whole course as history, and <code>git show 2e6b1b5</code> to see one
+                    lesson's code.
+                  </p>
+                  <p class="he">
+                    הודעות הקומיט הולכות לפי <strong>Conventional Commits</strong>:
+                    <code>feat(api): …</code> לפיצ'ר חדש, <code>fix(client): …</code> לתיקון באג,
+                    <code>docs:</code>, <code>chore:</code> ו-<code>test(e2e):</code>. החלק בסוגריים
+                    מציין את החבילה. נסו <code>git log --oneline</code> כדי לקרוא את כל הקורס הזה
+                    כהיסטוריה, ו-<code>git show 2e6b1b5</code> כדי לראות את הקוד של שיעור אחד.
+                  </p>
+                  <p>
+                    <a href="https://www.conventionalcommits.org/" target="_blank" rel="noopener"
+                      >conventionalcommits.org ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+
+            <article class="tech c-tool" id="t-claude">
+              <div class="tech-head">
+                <h3>CLAUDE.md · Claude Code</h3>
+                <span class="ver">AI pair programmer</span>
+              </div>
+              <span class="cat"
+                ><span class="en">Tooling</span><span class="he">כלי עבודה</span></span
+              >
+              <p class="short en">
+                A file of project rules and commands that an AI coding assistant reads before it
+                touches the code.
+              </p>
+              <p class="short he">
+                קובץ של חוקים ופקודות של הפרויקט שעוזר תכנות מבוסס AI קורא לפני שהוא נוגע בקוד.
+              </p>
+              <p class="where">
+                <b><span class="en">In TaskForge:</span><span class="he">ב-TaskForge:</span></b>
+                <span class="en"
+                  >commands, layout, conventions, "definition of done" and "never do".</span
+                ><span class="he">פקודות, מבנה, מוסכמות, "הגדרת סיום" ו"לעולם לא".</span>
+              </p>
+              <details class="more">
+                <summary><span class="en">Learn more</span><span class="he">להרחבה</span></summary>
+                <div class="more-body">
+                  <p class="en">
+                    TaskForge was built with Claude Code, an AI assistant that works in the
+                    terminal. <code>CLAUDE.md</code> works like an onboarding guide: it says which
+                    commands to run, how files are organized, which patterns to use, and what's
+                    forbidden (for example, adding dependencies without asking). It's just as useful
+                    for a new human teammate.
+                  </p>
+                  <p class="he">
+                    ‏TaskForge נבנתה עם Claude Code, עוזר AI שעובד בטרמינל. ‏<code>CLAUDE.md</code>
+                    עובד כמו מדריך קליטה: הוא אומר אילו פקודות להריץ, איך הקבצים מאורגנים, באילו
+                    תבניות להשתמש ומה אסור (למשל, להוסיף תלויות בלי לשאול). הוא שימושי באותה מידה גם
+                    לחבר צוות אנושי חדש.
+                  </p>
+                  <p>
+                    <a
+                      href="https://docs.claude.com/en/docs/claude-code/overview"
+                      target="_blank"
+                      rel="noopener"
+                      >Claude Code docs ↗</a
+                    >
+                  </p>
+                </div>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===================== COMMANDS ===================== -->
+        <section id="commands">
+          <div class="section-head">
+            <span class="eyebrow"
+              ><span class="en">Reference</span><span class="he">חומר עזר</span></span
+            >
+            <h2><span class="en">Command sheet</span><span class="he">דף פקודות</span></h2>
+            <p class="en">Run these from the repository root.</p>
+            <p class="he">מריצים מתיקיית השורש של הריפוזיטורי.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><span class="en">Task</span><span class="he">משימה</span></th>
+                  <th><span class="en">Command</span><span class="he">פקודה</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="en">Install everything</span><span class="he">התקנת הכול</span>
+                  </td>
+                  <td><code>npm install</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Run API + UI together</span
+                    ><span class="he">הרצת השרת והממשק יחד</span>
+                  </td>
+                  <td><code>npm run dev</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Fill with demo data</span
+                    ><span class="he">מילוי בנתוני דמו</span>
+                  </td>
+                  <td><code>npm run seed</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Run all tests</span><span class="he">הרצת כל הבדיקות</span>
+                  </td>
+                  <td><code>npm test</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Test one package</span><span class="he">בדיקת חבילה אחת</span>
+                  </td>
+                  <td><code>npx vitest run --project api</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Browser (E2E) tests</span
+                    ><span class="he">בדיקות דפדפן (E2E)</span>
+                  </td>
+                  <td><code>npm run e2e</code></td>
+                </tr>
+                <tr>
+                  <td><span class="en">Check types</span><span class="he">בדיקת טיפוסים</span></td>
+                  <td><code>npm run typecheck</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Lint / format</span><span class="he">Lint / עיצוב קוד</span>
+                  </td>
+                  <td><code>npm run lint</code> · <code>npm run format</code></td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="en">Build and run for production</span
+                    ><span class="he">build והרצה לייצור</span>
+                  </td>
+                  <td><code>npm run build</code> · <code>npm start</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ===================== GLOSSARY ===================== -->
+        <section id="glossary">
+          <div class="section-head">
+            <span class="eyebrow"
+              ><span class="en">Reference</span><span class="he">חומר עזר</span></span
+            >
+            <h2><span class="en">Glossary</span><span class="he">מילון מונחים</span></h2>
+          </div>
+          <dl class="gloss">
+            <div>
+              <dt>API</dt>
+              <dd class="en">A set of URLs a program can call to read or change data.</dd>
+              <dd class="he">אוסף כתובות שתוכנה יכולה לקרוא להן כדי לקרוא או לשנות מידע.</dd>
+            </div>
+            <div>
+              <dt>Endpoint</dt>
+              <dd class="en">One URL plus one HTTP verb, like <code>POST /projects</code>.</dd>
+              <dd class="he">כתובת אחת ופועל HTTP אחד, למשל <code>POST /projects</code>.</dd>
+            </div>
+            <div>
+              <dt>Middleware</dt>
+              <dd class="en">A function every request passes through on the way to its route.</dd>
+              <dd class="he">פונקציה שכל בקשה עוברת דרכה בדרך ל-route שלה.</dd>
+            </div>
+            <div>
+              <dt>Schema</dt>
+              <dd class="en">A description of valid data, used to check input.</dd>
+              <dd class="he">תיאור של מידע תקין, שמשמש לבדיקת קלט.</dd>
+            </div>
+            <div>
+              <dt>Cascade delete</dt>
+              <dd class="en">Deleting a parent also deletes its children (project → issues).</dd>
+              <dd class="he">מחיקת הורה מוחקת גם את הילדים שלו (פרויקט ← סוגיות).</dd>
+            </div>
+            <div>
+              <dt>Atomic write</dt>
+              <dd class="en">A save that either fully happens or doesn't happen at all.</dd>
+              <dd class="he">שמירה שקורית במלואה או לא קורית בכלל.</dd>
+            </div>
+            <div>
+              <dt>Optimistic update</dt>
+              <dd class="en">
+                Show the change first, confirm with the server after, and undo if it fails.
+              </dd>
+              <dd class="he">מציגים את השינוי קודם, מאשרים מול השרת אחר כך, ומבטלים אם נכשל.</dd>
+            </div>
+            <div>
+              <dt>Contract test</dt>
+              <dd class="en">
+                One test suite that every implementation of an interface must pass.
+              </dd>
+              <dd class="he">סט בדיקות אחד שכל מימוש של ממשק חייב לעבור.</dd>
+            </div>
+            <div>
+              <dt>E2E</dt>
+              <dd class="en">End-to-end: testing the full app through a real browser.</dd>
+              <dd class="he">קצה לקצה: בדיקה של כל האפליקציה דרך דפדפן אמיתי.</dd>
+            </div>
+            <div>
+              <dt>Design token</dt>
+              <dd class="en">
+                A named design value (a color, a size, a duration) stored as a CSS variable.
+              </dd>
+              <dd class="he">ערך עיצוב עם שם (צבע, גודל, משך) שנשמר כמשתנה CSS.</dd>
+            </div>
+            <div>
+              <dt>Locale</dt>
+              <dd class="en">
+                The user's language and region, like <code>he</code> or <code>en</code>.
+              </dd>
+              <dd class="he">השפה והאזור של המשתמש, למשל <code>he</code> או <code>en</code>.</dd>
+            </div>
+            <div>
+              <dt>Pull Request</dt>
+              <dd class="en">A request to merge a branch, where changes are reviewed first.</dd>
+              <dd class="he">בקשה למזג ענף, שבה השינויים נסקרים קודם.</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <footer class="foot gutter">
+      <div class="inner">
+        <span
+          >TaskForge · <span class="en">a course built from the repository's own history</span
+          ><span class="he">קורס שנבנה מתוך ההיסטוריה של הריפוזיטורי עצמו</span></span
+        >
+        <span class="mono">a960608 → 78aa0b0</span>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var store = {
+          get: function (k) {
+            try {
+              return localStorage.getItem(k);
+            } catch (e) {
+              return null;
+            }
+          },
+          set: function (k, v) {
+            try {
+              localStorage.setItem(k, v);
+            } catch (e) {}
+          },
+        };
+
+        /* Language */
+        var langButtons = document.querySelectorAll('[data-lang]');
+        function setLang(lang) {
+          root.lang = lang;
+          root.dir = lang === 'he' ? 'rtl' : 'ltr';
+          langButtons.forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+          });
+          store.set('tf-course-lang', lang);
+        }
+        langButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            setLang(b.dataset.lang);
+          });
+        });
+        setLang(store.get('tf-course-lang') === 'he' ? 'he' : 'en');
+
+        /* Theme */
+        var themeBtn = document.getElementById('theme-btn');
+        function isDark() {
+          var t = root.getAttribute('data-theme');
+          if (t) return t === 'dark';
+          return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        var savedTheme = store.get('tf-course-theme');
+        if (savedTheme === 'dark' || savedTheme === 'light')
+          root.setAttribute('data-theme', savedTheme);
+        themeBtn.addEventListener('click', function () {
+          var next = isDark() ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          store.set('tf-course-theme', next);
+        });
+
+        /* Progress */
+        var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-lesson]'));
+        var done = {};
+        try {
+          done = JSON.parse(store.get('tf-course-done') || '{}') || {};
+        } catch (e) {
+          done = {};
+        }
+        function render() {
+          var count = 0;
+          boxes.forEach(function (box) {
+            var id = box.dataset.lesson;
+            box.checked = !!done[id];
+            if (done[id]) count++;
+            var lesson = document.getElementById(id);
+            if (lesson) lesson.classList.toggle('is-done', !!done[id]);
+            var link = document.querySelector('.toc a[data-lesson="' + id + '"]');
+            if (link) link.classList.toggle('done', !!done[id]);
+          });
+          document.getElementById('mini-count').textContent = count + '/' + boxes.length;
+          document.getElementById('mini-bar').style.width = (count / boxes.length) * 100 + '%';
+        }
+        boxes.forEach(function (box) {
+          box.addEventListener('change', function () {
+            done[box.dataset.lesson] = box.checked;
+            store.set('tf-course-done', JSON.stringify(done));
+            render();
+          });
+        });
+        render();
+
+        /* Collapse the index on narrow screens */
+        var tocDetails = document.getElementById('toc-details');
+        var narrow = window.matchMedia('(max-width: 960px)');
+        function syncToc() {
+          tocDetails.open = !narrow.matches;
+        }
+        syncToc();
+        if (narrow.addEventListener) narrow.addEventListener('change', syncToc);
+        document.querySelector('.toc-title').addEventListener('click', function (e) {
+          if (!narrow.matches) e.preventDefault();
+        });
+        document.querySelectorAll('.toc a').forEach(function (a) {
+          a.addEventListener('click', function () {
+            if (narrow.matches) tocDetails.open = false;
+          });
+        });
+
+        /* Highlight the lesson in view */
+        var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+        var targets = links
+          .map(function (a) {
+            return document.querySelector(a.getAttribute('href'));
+          })
+          .filter(Boolean);
+        if ('IntersectionObserver' in window) {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (en) {
+                if (!en.isIntersecting) return;
+                links.forEach(function (a) {
+                  a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id);
+                });
+              });
+            },
+            { rootMargin: '-20% 0px -70% 0px' },
+          );
+          targets.forEach(function (t) {
+            io.observe(t);
+          });
+        }
+
+        /* Technology filters */
+        var cards = document.querySelectorAll('#tech-grid .tech');
+        var filterButtons = document.querySelectorAll('[data-filter]');
+        filterButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            var f = b.dataset.filter;
+            filterButtons.forEach(function (x) {
+              x.setAttribute('aria-pressed', String(x === b));
+            });
+            cards.forEach(function (c) {
+              c.hidden = f !== 'all' && !c.classList.contains(f);
+            });
+          });
+        });
+
+        /* Expand / collapse all */
+        var expandBtn = document.getElementById('expand-all');
+        var expanded = false;
+        expandBtn.addEventListener('click', function () {
+          expanded = !expanded;
+          document.querySelectorAll('#tech-grid details.more').forEach(function (d) {
+            d.open = expanded;
+          });
+          expandBtn.querySelector('.en').textContent = expanded ? 'Collapse all' : 'Expand all';
+          expandBtn.querySelector('.he').textContent = expanded ? 'סגור הכול' : 'פתח הכול';
+        });
+
+        /* Opening a chip link expands its card */
+        function openTarget() {
+          var el = location.hash && document.getElementById(location.hash.slice(1));
+          if (el && el.classList.contains('tech')) {
+            if (el.hidden) document.querySelector('[data-filter="all"]').click();
+            var d = el.querySelector('details');
+            if (d) d.open = true;
+          }
+        }
+        window.addEventListener('hashchange', openTarget);
+        openTarget();
+      })();
+    </script>
+  </body>
+</html>
