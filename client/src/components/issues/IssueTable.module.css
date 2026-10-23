@@ -1,0 +1,189 @@
+.table {
+  width: 100%;
+  table-layout: fixed;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+.stale {
+  opacity: 0.6;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: var(--row-height);
+  padding: 0 var(--s-3);
+  border-bottom: var(--hairline);
+  background: var(--paper);
+  text-align: left;
+  font-weight: var(--weight-regular);
+}
+
+.table td {
+  height: var(--row-height);
+  padding: 0 var(--s-3);
+  border-bottom: var(--hairline);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: var(--s-6);
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: var(--s-6);
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 24px;
+  margin: 0 calc(var(--s-1) * -1);
+  padding: 0 var(--s-1);
+  border-radius: var(--radius-1);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.sortButton:hover,
+.sorted {
+  color: var(--ink);
+}
+
+/* Rows */
+.row {
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.row:hover {
+  background: var(--paper-hover);
+}
+
+.cursor {
+  background: var(--paper-hover);
+  box-shadow: inset 2px 0 0 var(--signal);
+}
+
+.selected {
+  background: var(--paper-2);
+}
+
+.selected.cursor {
+  background: var(--paper-hover);
+}
+
+.titleLink {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  text-decoration: none;
+  unicode-bidi: plaintext;
+  /* Hebrew titles keep RTL order but line up with the column, so the scan line stays straight. */
+  text-align: left;
+}
+
+/* Finished entries recede so open work reads first. */
+.closed .titleLink {
+  color: var(--ink-2);
+}
+
+.titleLink:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+.titleLink:focus-visible {
+  outline-offset: 2px;
+}
+
+/* On the cursor row the signal edge already says "you are here". */
+.cursor .titleLink:focus-visible {
+  outline: none;
+}
+
+/* Columns */
+.colNumber {
+  width: 88px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+}
+
+.colTitle {
+  width: auto;
+}
+
+.colStatus {
+  width: 136px;
+}
+
+.colPriority {
+  width: 112px;
+}
+
+.colCreated {
+  width: 112px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  text-align: right;
+}
+
+th.colCreated {
+  text-align: right;
+}
+
+/* Column drop-off follows the width of the issues column, not the window. */
+@container issues (max-width: 759px) {
+  .colCreated {
+    display: none;
+  }
+}
+
+/* Compact: keep ID, title and a glyph-only status. */
+@container issues (max-width: 559px) {
+  .colPriority {
+    display: none;
+  }
+
+  .colNumber {
+    width: 56px;
+  }
+
+  .colStatus {
+    width: 44px;
+  }
+
+  /* "STATUS" doesn't fit a glyph-wide column; it stays for screen readers, the glyphs speak visually. */
+  th.colStatus .sortButton {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .table th:first-child,
+  .table td:first-child {
+    padding-left: var(--s-4);
+  }
+
+  .table th:last-child,
+  .table td:last-child {
+    padding-right: var(--s-4);
+  }
+}

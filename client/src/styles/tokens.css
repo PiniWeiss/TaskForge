@@ -1,0 +1,118 @@
+/*
+ * TaskForge design tokens — the only place raw colours, sizes and timings live.
+ * See DESIGN.md. Colours use light-dark(): `color-scheme` on :root picks the side,
+ * so the theme toggle only has to set data-theme.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Surfaces */
+  --paper: light-dark(#f4f1e8, #1c1b18);
+  --paper-2: light-dark(#ece8dc, #232220);
+  --paper-hover: light-dark(#e9e4d7, #292724);
+  --paper-input: light-dark(#faf8f2, #1f1e1b);
+
+  /* Ink */
+  --ink: light-dark(#1d1b17, #eae4d8);
+  --ink-2: light-dark(#555048, #b4ad9f);
+  --ink-3: light-dark(#655f55, #9c9588);
+
+  /* Structure */
+  --rule: light-dark(#d8d2c4, #36332e);
+  --rule-strong: light-dark(#8c8577, #6e685e);
+
+  /* Signal — the single accent */
+  --signal: light-dark(#b5361a, #ee7455);
+  --signal-hover: light-dark(#9a2c14, #f28a6f);
+  --signal-ink: light-dark(#fbf8f1, #1c1b18);
+  --signal-wash: light-dark(#f3ded6, #3a2620);
+
+  /* Behind drawers and dialogs */
+  --scrim: light-dark(rgb(29 27 23 / 0.32), rgb(0 0 0 / 0.56));
+
+  /* Status — muted, never traffic-light */
+  --status-open: light-dark(#4e6672, #9aafb9);
+  --status-progress: light-dark(#7e5a18, #d1a65a);
+  --status-closed: light-dark(#55684f, #9bb094);
+
+  /* Type */
+  --font-sans:
+    'IBM Plex Sans', 'Noto Sans Hebrew', 'Arial Hebrew', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+
+  --text-micro: 11px;
+  --leading-micro: 16px;
+  --text-meta: 12px;
+  --leading-meta: 16px;
+  --text-body: 13px;
+  --leading-body: 20px;
+  --text-read: 15px;
+  --leading-read: 24px;
+  --text-title: 18px;
+  --leading-title: 24px;
+  --text-head: 22px;
+  --leading-head: 28px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-strong: 600;
+  --tracking-caps: 0.06em;
+
+  /* Space — 4px grid */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  /* Layout */
+  --row-height: 32px;
+  --header-height: 56px;
+  --bar-height: 40px;
+  --sidebar-width: 232px;
+  --panel-width: 480px;
+  --measure-read: 68ch;
+
+  /* Shape */
+  --radius-1: 2px;
+  --radius-2: 4px;
+  --hairline: 1px solid var(--rule);
+  --elev-menu:
+    0 0 0 1px var(--rule), 0 4px 12px light-dark(rgb(29 27 23 / 0.08), rgb(0 0 0 / 0.32));
+  --focus-ring: 2px solid var(--signal);
+  --focus-offset: 1px;
+
+  /* Motion */
+  --dur-1: 120ms;
+  --dur-2: 160ms;
+  --dur-3: 180ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --panel-shift: 12px;
+
+  /* Layers */
+  --z-panel: 10;
+  --z-overlay: 40;
+  --z-menu: 50;
+  --z-toast: 60;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+    --panel-shift: 0px;
+  }
+}

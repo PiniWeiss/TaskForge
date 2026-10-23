@@ -106,6 +106,26 @@ describe('listIssuesQuerySchema', () => {
   });
 });
 
+describe('listIssuesQuerySchema q', () => {
+  it('trims and NFC-normalizes the search text', () => {
+    expect(listIssuesQuerySchema.parse({ q: `  ${'שָׁלוֹם'.normalize('NFD')} ` }).q).toBe(
+      'שָׁלוֹם'.normalize('NFC'),
+    );
+  });
+
+  it('treats a blank search as no search', () => {
+    expect(listIssuesQuerySchema.parse({ q: '   ' }).q).toBeUndefined();
+  });
+
+  it('limits the search to 200 characters and accepts sort=number', () => {
+    expect(listIssuesQuerySchema.safeParse({ q: 'a'.repeat(201) }).success).toBe(false);
+    expect(listIssuesQuerySchema.parse({ sort: '-number' }).sort).toEqual({
+      field: 'number',
+      dir: 'desc',
+    });
+  });
+});
+
 describe('issueParamsSchema', () => {
   it('requires UUIDs', () => {
     const projectId = '00000000-0000-4000-8000-000000000001';

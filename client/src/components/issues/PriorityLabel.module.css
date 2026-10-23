@@ -1,0 +1,36 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+
+.glyph {
+  width: 12px;
+  height: 12px;
+}
+
+.on {
+  fill: currentColor;
+}
+
+.off {
+  fill: var(--rule);
+}
+
+/* Color lives in the bars; only High's bars use the signal colour. The word stays ink. */
+.glyph.low {
+  color: var(--ink-3);
+}
+
+.glyph.medium {
+  color: var(--ink-2);
+}
+
+.glyph.high {
+  color: var(--signal);
+}
+
+.quiet {
+  color: var(--ink-2);
+}

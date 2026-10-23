@@ -1,0 +1,34 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+}
+
+.glyph {
+  width: 12px;
+  height: 12px;
+}
+
+.open {
+  color: var(--status-open);
+}
+
+.in_progress {
+  color: var(--status-progress);
+}
+
+.closed {
+  color: var(--status-closed);
+}
+
+@container issues (max-width: 559px) {
+  .narrowHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

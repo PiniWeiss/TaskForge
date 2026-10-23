@@ -5,3 +5,5 @@ coverage/
 .env
 server/api/data/*
 !server/api/data/.gitkeep
+client/test-results/
+client/playwright-report/

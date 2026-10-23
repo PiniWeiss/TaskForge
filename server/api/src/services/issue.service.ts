@@ -63,6 +63,7 @@ export class IssueService {
     const {
       id: _id,
       projectId: _projectId,
+      number: _number,
       createdAt: _createdAt,
       ...current
     } = await this.get(projectId, issueId);

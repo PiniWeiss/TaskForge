@@ -1,0 +1,142 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--panel-width);
+  min-height: 0;
+  border-left: var(--hairline);
+  background: var(--paper);
+  animation: panel-in var(--dur-3) var(--ease-out);
+}
+
+.panel:focus-visible {
+  outline: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-shrink: 0;
+  height: var(--header-height);
+  padding: 0 var(--s-3) 0 var(--s-6);
+  border-bottom: var(--hairline);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.number {
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+}
+
+.project {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-3);
+  font-size: var(--text-meta);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 28px;
+  padding: 0 var(--s-2);
+  border-radius: var(--radius-2);
+  color: var(--ink-2);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.close:hover {
+  background: var(--paper-hover);
+  color: var(--ink);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.skeleton {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-6);
+}
+
+.skeletonTitle,
+.skeletonLine,
+.skeletonShort {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-1);
+  background: var(--rule);
+  animation: pulse 1.4s var(--ease-out) infinite alternate;
+}
+
+.skeletonTitle {
+  width: 72%;
+  height: 16px;
+  margin-bottom: var(--s-3);
+}
+
+.skeletonShort {
+  width: 40%;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--panel-shift));
+  }
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonTitle,
+  .skeletonLine,
+  .skeletonShort {
+    animation: none;
+  }
+}
+
+/* Between tablet and laptop the panel takes less room so the table stays readable. */
+@media (max-width: 1199px) {
+  .panel {
+    width: 420px;
+  }
+}
+
+/* Narrow: the panel covers the screen. */
+@media (max-width: 767px) {
+  .panel {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-panel);
+    width: auto;
+    border-left: 0;
+  }
+
+  .header {
+    padding: 0 var(--s-2) 0 var(--s-4);
+  }
+
+  .close kbd {
+    display: none;
+  }
+}

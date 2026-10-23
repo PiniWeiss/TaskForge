@@ -1,0 +1,13 @@
+.status {
+  margin-top: var(--s-8);
+  padding-top: var(--s-2);
+  border-top: var(--hairline);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  line-height: var(--leading-micro);
+}
+
+.error {
+  color: var(--signal);
+}

@@ -1,0 +1,82 @@
+.quickAdd {
+  padding: var(--s-3) var(--s-6) var(--s-2);
+  border-bottom: var(--hairline);
+  background: var(--paper-2);
+  animation: open var(--dur-2) var(--ease-out);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-1);
+  background: var(--paper-input);
+  unicode-bidi: plaintext;
+}
+
+.title::placeholder {
+  color: var(--ink-3);
+}
+
+.title:focus-visible {
+  outline: none;
+  border-color: var(--signal);
+  box-shadow: 0 0 0 1px var(--signal);
+}
+
+.title[aria-invalid='true'] {
+  border-color: var(--signal);
+}
+
+.note {
+  min-height: var(--leading-meta);
+  margin-top: var(--s-2);
+  color: var(--ink-3);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+}
+
+.note kbd {
+  vertical-align: 1px;
+}
+
+.error {
+  color: var(--signal);
+}
+
+.createdLink {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@container issues (max-width: 559px) {
+  .quickAdd {
+    padding: var(--s-3) var(--s-4) var(--s-2);
+  }
+
+  .row {
+    flex-wrap: wrap;
+  }
+
+  .title {
+    flex-basis: 100%;
+  }
+}

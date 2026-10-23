@@ -1,0 +1,47 @@
+.layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.view {
+  /* The table and toolbar respond to the room they have, which shrinks when the panel opens. */
+  container: issues / inline-size;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.missing {
+  padding: var(--s-10) var(--s-6);
+}
+
+.missingTitle {
+  font-size: var(--text-title);
+  line-height: var(--leading-title);
+  font-weight: var(--weight-medium);
+}
+
+.missingText {
+  margin-top: var(--s-2);
+  color: var(--ink-2);
+}
+
+.missingText a {
+  color: var(--ink);
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+.kbdOnSignal {
+  border-color: color-mix(in srgb, var(--signal-ink) 40%, transparent);
+  color: var(--signal-ink);
+}
+
+@container issues (max-width: 559px) {
+  .kbdOnSignal {
+    display: none;
+  }
+}

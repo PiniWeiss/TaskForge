@@ -1,0 +1,58 @@
+.group {
+  display: inline-flex;
+  flex-shrink: 0;
+  min-inline-size: 0;
+  height: 28px;
+  padding: 0;
+  border: var(--hairline);
+  border-radius: var(--radius-2);
+}
+
+.option {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 var(--s-3);
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+.option + .option {
+  border-left: var(--hairline);
+}
+
+.option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.option:hover {
+  color: var(--ink);
+}
+
+.option:has(input:checked) {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+.option:first-of-type {
+  border-radius: var(--radius-2) 0 0 var(--radius-2);
+}
+
+.option:last-of-type {
+  border-radius: 0 var(--radius-2) var(--radius-2) 0;
+}
+
+.option:has(input:focus-visible) {
+  z-index: 1;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

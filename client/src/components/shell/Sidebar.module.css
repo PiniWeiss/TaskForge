@@ -1,0 +1,62 @@
+.sidebar {
+  display: grid;
+  grid-template-rows: var(--header-height) minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  background: var(--paper-2);
+  border-right: var(--hairline);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0 var(--s-4);
+  border-bottom: var(--hairline);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.mark {
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+}
+
+.nav {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--s-3) 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  height: var(--bar-height);
+  padding: 0 var(--s-2) 0 var(--s-4);
+  border-top: var(--hairline);
+}
+
+.shortcuts {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-1);
+}
+
+.shortcuts kbd {
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.shortcuts:hover kbd {
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}

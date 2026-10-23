@@ -1,0 +1,61 @@
+.wrapper {
+  display: grid;
+}
+
+/* Reads as plain text until hovered or focused; then shows its edge. */
+.field {
+  margin: 0 calc(var(--s-2) * -1);
+  width: calc(100% + var(--s-2) * 2);
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-1);
+  background: transparent;
+  resize: none;
+  field-sizing: content;
+  unicode-bidi: plaintext;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+.field:hover {
+  border-color: var(--rule);
+}
+
+.field:focus-visible,
+.field:focus {
+  outline: none;
+  border-color: var(--signal);
+  background: var(--paper-input);
+  box-shadow: 0 0 0 1px var(--signal);
+}
+
+.field::placeholder {
+  color: var(--ink-3);
+}
+
+.field[aria-invalid='true'] {
+  border-color: var(--signal);
+}
+
+.single {
+  min-height: calc(var(--leading-title) + var(--s-2) + 2px);
+  font-size: var(--text-title);
+  line-height: var(--leading-title);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.multiline {
+  min-height: calc(var(--leading-read) * 4 + var(--s-2) + 2px);
+  max-width: calc(var(--measure-read) + var(--s-4));
+  font-size: var(--text-read);
+  line-height: var(--leading-read);
+}
+
+.error {
+  margin-top: var(--s-1);
+  color: var(--signal);
+  font-size: var(--text-meta);
+  line-height: var(--leading-meta);
+}

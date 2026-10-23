@@ -1,0 +1,49 @@
+.empty {
+  max-width: 60ch;
+  padding: var(--s-8) var(--s-6);
+}
+
+.title {
+  font-weight: var(--weight-regular);
+}
+
+.title strong {
+  font-weight: var(--weight-medium);
+}
+
+.hint {
+  margin-top: var(--s-1);
+  color: var(--ink-2);
+}
+
+.hint kbd {
+  vertical-align: 1px;
+}
+
+.link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* Touch screens have no C key to press. */
+@media (hover: none) {
+  .keyHint {
+    display: none;
+  }
+}
+
+.action {
+  margin-top: var(--s-4);
+}
+
+@container issues (max-width: 559px) {
+  .empty {
+    padding: var(--s-6) var(--s-4);
+  }
+}

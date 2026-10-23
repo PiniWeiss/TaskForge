@@ -1,0 +1,50 @@
+.toggle {
+  display: inline-flex;
+  min-inline-size: 0;
+  padding: 0;
+  border: var(--hairline);
+  border-radius: var(--radius-2);
+}
+
+.option {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  height: 22px;
+  padding: 0 var(--s-2);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+.option + .option {
+  border-left: var(--hairline);
+}
+
+.option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.option:hover {
+  color: var(--ink);
+}
+
+.option:has(input:checked) {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.option:has(input:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  z-index: 1;
+}

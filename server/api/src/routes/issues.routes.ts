@@ -22,10 +22,10 @@ export function createIssuesRouter(service: IssueService): Router {
     validate(
       { params: projectParamsSchema, query: listIssuesQuerySchema },
       async ({ params, query }, _req, res) => {
-        const { limit, offset, sort, status, priority } = query;
+        const { limit, offset, sort, status, priority, q } = query;
         const page = await service.list(
           params.projectId,
-          { status, priority },
+          { status, priority, q },
           { limit, offset, sort },
         );
         const body: ListResponse<Issue> = {

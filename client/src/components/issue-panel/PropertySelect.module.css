@@ -1,0 +1,75 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 28px;
+  margin-left: calc(var(--s-2) * -1);
+  padding: 0 var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-2);
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
+}
+
+.trigger:hover,
+.trigger[data-state='open'] {
+  border-color: var(--rule);
+  background: var(--paper-hover);
+}
+
+.chevron {
+  color: var(--ink-3);
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.trigger:hover .chevron,
+.trigger:focus-visible .chevron,
+.trigger[data-state='open'] .chevron {
+  opacity: 1;
+}
+
+.content {
+  z-index: var(--z-menu);
+  min-width: 160px;
+  padding: var(--s-1);
+  border-radius: var(--radius-2);
+  background: var(--paper);
+  box-shadow: var(--elev-menu);
+  animation: select-in var(--dur-2) var(--ease-out);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  height: 28px;
+  padding: 0 var(--s-2);
+  border-radius: var(--radius-1);
+  cursor: default;
+  user-select: none;
+  outline: none;
+}
+
+.item[data-highlighted] {
+  background: var(--paper-hover);
+}
+
+.check {
+  color: var(--ink-2);
+}
+
+@keyframes select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
+@media (hover: none) {
+  .chevron {
+    opacity: 1;
+  }
+}

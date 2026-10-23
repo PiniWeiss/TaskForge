@@ -1,0 +1,51 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--bar-height);
+  padding: var(--s-1) var(--s-6);
+  border-bottom: var(--hairline);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.columns {
+  margin-left: auto;
+}
+
+.compact {
+  display: none;
+}
+
+@container issues (max-width: 799px) {
+  .roomy {
+    display: none;
+  }
+
+  .compact {
+    display: inline-flex;
+  }
+}
+
+/* Compact: search on its own line, filters beneath it. */
+@container issues (max-width: 559px) {
+  .toolbar {
+    padding: var(--s-2) var(--s-4);
+  }
+
+  .filters {
+    order: 1;
+    flex: 1 0 100%;
+  }
+
+  .columns {
+    display: none;
+  }
+}
