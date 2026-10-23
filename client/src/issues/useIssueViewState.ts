@@ -20,7 +20,9 @@ export function useIssueViewState() {
           const next: IssueViewState = { ...previous, page: 1, ...change };
           return serializeViewState(next);
         },
-        { replace: options.replace ?? false },
+        // Apply synchronously so controls (radios, selects) never flash their previous value
+        // while the navigation is pending.
+        { replace: options.replace ?? false, flushSync: true },
       );
     },
     [setSearchParams],

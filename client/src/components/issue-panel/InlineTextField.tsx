@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { asSentence } from '../../lib/text.ts';
 import styles from './InlineTextField.module.css';
 
@@ -32,6 +32,8 @@ export function InlineTextField({
   const [focused, setFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seen, setSeen] = useState(value);
+  // Esc blurs the field to finish; that blur must not save the text Esc just discarded.
+  const discardOnBlur = useRef(false);
 
   // Server value changed (save landed, rollback, refetch): follow it unless the user is typing.
   if (value !== seen) {
@@ -64,6 +66,7 @@ export function InlineTextField({
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === 'Escape') {
       event.preventDefault();
+      discardOnBlur.current = true;
       setDraft(value);
       setError(null);
       event.currentTarget.blur();
@@ -93,6 +96,10 @@ export function InlineTextField({
         }}
         onBlur={() => {
           setFocused(false);
+          if (discardOnBlur.current) {
+            discardOnBlur.current = false;
+            return;
+          }
           void commit();
         }}
         onKeyDown={onKeyDown}
