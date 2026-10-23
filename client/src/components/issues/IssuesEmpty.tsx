@@ -77,15 +77,17 @@ export function IssuesEmpty({
         No issues in <span dir="auto">{projectName}</span> yet.
       </p>
       {onCreate && (
-        <>
-          <p className={styles.hint}>
-            File the first one: a bug, a chore, a question for the team. Press <Kbd>C</Kbd> from
-            anywhere in the list.
-          </p>
-          <Button variant="primary" className={styles.action} onClick={onCreate}>
-            New issue
-          </Button>
-        </>
+        // The header already has the New issue button; a second primary button would compete.
+        <p className={styles.hint}>
+          <button type="button" className={styles.link} onClick={onCreate}>
+            File the first one
+          </button>
+          : a bug, a chore, a question for the team.
+          <span className={styles.keyHint}>
+            {' '}
+            Or press <Kbd>C</Kbd> from anywhere in the list.
+          </span>
+        </p>
       )}
     </div>
   );

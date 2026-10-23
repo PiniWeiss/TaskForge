@@ -20,6 +20,24 @@
   vertical-align: 1px;
 }
 
+.link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* Touch screens have no C key to press. */
+@media (hover: none) {
+  .keyHint {
+    display: none;
+  }
+}
+
 .action {
   margin-top: var(--s-4);
 }
