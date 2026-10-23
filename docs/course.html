@@ -1097,6 +1097,960 @@
         gap: 8px 24px;
         justify-content: space-between;
       }
+
+      /* =====================================================================
+         Motion and play: hero terminal, reveals, demos, quizzes, celebrations
+         ===================================================================== */
+      :root {
+        --term-bg: #1d1b17;
+        --term-fg: #eae4d8;
+        --term-dim: #9c9588;
+        --term-ok: #9bb094;
+        --ok: #55684f;
+        --ok-wash: #dfe6d9;
+        interpolate-size: allow-keywords;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --term-bg: #12110f;
+          --term-dim: #8a8478;
+          --ok: #9bb094;
+          --ok-wash: #26301f;
+        }
+      }
+      :root[data-theme='dark'] {
+        --term-bg: #12110f;
+        --term-dim: #8a8478;
+        --ok: #9bb094;
+        --ok-wash: #26301f;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes pop {
+        0% {
+          transform: scale(0.6);
+          opacity: 0;
+        }
+        70% {
+          transform: scale(1.12);
+          opacity: 1;
+        }
+        100% {
+          transform: none;
+          opacity: 1;
+        }
+      }
+      @keyframes draw {
+        to {
+          transform: scaleX(1);
+        }
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: none;
+        }
+        20% {
+          transform: translateX(-6px);
+        }
+        40% {
+          transform: translateX(6px);
+        }
+        60% {
+          transform: translateX(-4px);
+        }
+        80% {
+          transform: translateX(4px);
+        }
+      }
+      @keyframes flashOk {
+        0% {
+          background: var(--ok-wash);
+          border-color: var(--ok);
+          transform: scale(1.03);
+        }
+      }
+      @keyframes flashNew {
+        0% {
+          background: var(--signal-wash);
+          border-color: var(--signal);
+        }
+      }
+
+      /* Hero: staggered entrance, drawn underline, live terminal */
+      .hero-inner > :not(.hero-term) {
+        animation: rise 0.6s var(--ease) both;
+      }
+      .hero-inner > :nth-child(2) {
+        animation-delay: 0.08s;
+      }
+      .hero-inner > :nth-child(3),
+      .hero-inner > :nth-child(4) {
+        animation-delay: 0.16s;
+      }
+      .hero-inner > :nth-child(5) {
+        animation-delay: 0.24s;
+      }
+      .hero-inner > :nth-child(6) {
+        animation-delay: 0.32s;
+      }
+      .hero h1 em {
+        position: relative;
+        white-space: nowrap;
+      }
+      .hero h1 em::after {
+        content: '';
+        position: absolute;
+        inset-inline: 0;
+        bottom: -0.04em;
+        height: 0.08em;
+        background: var(--signal);
+        transform-origin: left;
+        transform: scaleX(0);
+        animation: draw 0.8s var(--ease) 0.75s forwards;
+      }
+      html[dir='rtl'] .hero h1 em::after {
+        transform-origin: right;
+      }
+      @media (min-width: 1000px) {
+        .hero-inner {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+          column-gap: 48px;
+        }
+        .hero-inner > * {
+          grid-column: 1;
+        }
+        .hero-inner > .hero-term {
+          grid-column: 2;
+          grid-row: 1 / span 6;
+          align-self: center;
+        }
+      }
+      .hero-term {
+        min-width: 0;
+        background: var(--term-bg);
+        color: var(--term-fg);
+        border: 1px solid var(--rule-strong);
+        border-radius: 6px;
+        overflow: hidden;
+        direction: ltr;
+        text-align: left;
+        animation: rise 0.7s var(--ease) 0.35s both;
+      }
+      .term-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--term-dim);
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        color: var(--term-dim);
+      }
+      .term-bar i {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--term-dim);
+        opacity: 0.45;
+      }
+      .term-bar i:first-child {
+        background: var(--signal);
+        opacity: 1;
+      }
+      .term-bar span {
+        margin-inline-start: 8px;
+      }
+      .term-body {
+        margin: 0;
+        padding: 16px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        min-height: 262px;
+        overflow-x: auto;
+        white-space: pre;
+      }
+      .term-body .tp,
+      .term-body .te {
+        color: var(--signal);
+      }
+      .term-body .te {
+        font-weight: 500;
+      }
+      .term-body .td {
+        color: var(--term-dim);
+      }
+      .term-body .tok {
+        color: var(--term-ok);
+      }
+      .caret {
+        display: inline-block;
+        width: 8px;
+        height: 1.1em;
+        margin-inline-start: 2px;
+        vertical-align: -3px;
+        background: var(--term-fg);
+        animation: blink 1s steps(1) infinite;
+      }
+
+      /* Reading progress under the top bar */
+      .scroll-progress {
+        position: absolute;
+        inset-inline: 0;
+        bottom: -1px;
+        height: 2px;
+        background: var(--signal);
+        transform-origin: left;
+        transform: scaleX(0);
+      }
+      html[dir='rtl'] .scroll-progress {
+        transform-origin: right;
+      }
+
+      /* Scroll reveal (only for things below the first screen) */
+      .rv {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      .rv.in {
+        opacity: 1;
+        transform: none;
+        transition:
+          opacity 0.6s var(--ease),
+          transform 0.6s var(--ease);
+      }
+      .lesson.rv.in .lesson-no {
+        animation: pop 0.55s var(--ease) 0.15s both;
+      }
+
+      /* Small life everywhere */
+      .toc a {
+        transition:
+          background 0.2s,
+          color 0.2s,
+          border-color 0.2s,
+          padding 0.2s var(--ease);
+      }
+      .toc a.active {
+        padding-inline-start: 12px;
+      }
+      .btn,
+      .chip {
+        transition:
+          background 0.15s,
+          color 0.15s,
+          border-color 0.15s,
+          transform 0.15s var(--ease);
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .chip:hover {
+        transform: translateY(-1px);
+      }
+      .lesson-no {
+        transition: color 0.3s;
+      }
+      .done-toggle {
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .done-toggle input:checked {
+        animation: pop 0.4s var(--ease);
+      }
+      .tech {
+        transition:
+          transform 0.2s var(--ease),
+          border-color 0.2s;
+      }
+      .tech:hover {
+        transform: translateY(-3px);
+        border-color: var(--rule-strong);
+      }
+      .tech.pop {
+        animation: rise 0.45s var(--ease) both;
+      }
+
+      /* Smooth open / close for "Learn more" */
+      details.more > summary::before {
+        transition:
+          transform 0.25s var(--ease),
+          background 0.2s;
+      }
+      details.more[open] > summary::before {
+        transform: rotate(180deg);
+      }
+      details.more::details-content {
+        block-size: 0;
+        overflow: clip;
+        transition:
+          block-size 0.3s var(--ease),
+          content-visibility 0.3s allow-discrete;
+      }
+      details.more[open]::details-content {
+        block-size: auto;
+      }
+      details.more[open] .more-body {
+        animation: rise 0.35s var(--ease) both;
+      }
+
+      /* Request journey */
+      .journey {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 16px;
+        margin-top: 16px;
+      }
+      .journey .btn svg {
+        width: 12px;
+        height: 12px;
+        fill: var(--signal);
+      }
+      html[dir='rtl'] .journey .btn svg {
+        transform: scaleX(-1);
+      }
+      .journey .btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .journey-cap {
+        flex: 1 1 260px;
+        min-height: 2.6em;
+        color: var(--ink-2);
+        font-size: var(--t-small);
+      }
+      .layer {
+        transition:
+          border-color 0.25s,
+          background 0.25s,
+          transform 0.25s var(--ease);
+      }
+      .layer.lit {
+        border-color: var(--signal);
+        background: var(--signal-wash);
+        transform: translateX(6px);
+      }
+      html[dir='rtl'] .layer.lit {
+        transform: translateX(-6px);
+      }
+      .layer.lit-ok {
+        border-color: var(--ok);
+        background: var(--ok-wash);
+      }
+      .arrow {
+        position: relative;
+      }
+      .arrow.flow::after {
+        content: '';
+        position: absolute;
+        inset-inline-start: 21px;
+        top: 0;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--signal);
+        animation: flowDown 0.45s linear forwards;
+      }
+      .arrow.flow.up::after {
+        background: var(--ok);
+        animation-name: flowUp;
+        animation-duration: 0.3s;
+      }
+      @keyframes flowDown {
+        from {
+          top: -4px;
+        }
+        to {
+          top: calc(100% - 3px);
+        }
+      }
+      @keyframes flowUp {
+        from {
+          top: calc(100% - 3px);
+        }
+        to {
+          top: -4px;
+        }
+      }
+
+      /* Demos and quizzes */
+      .demo,
+      .quiz {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid var(--rule-strong);
+        border-radius: 6px;
+        background: var(--paper-raised);
+        min-width: 0;
+      }
+      .quiz {
+        margin-top: 28px;
+        border-style: dashed;
+      }
+      .demo-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+      }
+      .demo-tag {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: var(--signal);
+        color: var(--signal-ink);
+        padding: 2px 7px;
+        border-radius: var(--radius-1);
+      }
+      .quiz .demo-tag {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .demo-title {
+        font-weight: 600;
+      }
+      .demo-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .demo-label {
+        min-width: 64px;
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+      }
+      .tbtn {
+        font: inherit;
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        padding: 5px 10px;
+        background: var(--paper);
+        color: var(--ink-2);
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-2);
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s,
+          border-color 0.15s,
+          transform 0.12s;
+      }
+      .tbtn:hover {
+        color: var(--ink);
+        background: var(--paper-2);
+      }
+      .tbtn:active {
+        transform: scale(0.95);
+      }
+      .tbtn[aria-pressed='true'] {
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      .tbtn:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .demo-note {
+        min-height: 1.6em;
+        font-size: var(--t-small);
+        color: var(--ink-2);
+      }
+      .hl-stay {
+        outline: 1px dashed var(--ok);
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+      .typing::after {
+        content: '▍';
+        color: var(--ink-3);
+        animation: blink 1s steps(1) infinite;
+      }
+
+      /* Status glyph: hollow, half, full (as in the app) */
+      .st {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        transition: color 0.2s;
+      }
+      .st i {
+        width: 10px;
+        height: 10px;
+        flex: none;
+        border: 1.5px solid currentColor;
+        border-radius: 50%;
+      }
+      .st[data-s='open'] {
+        color: var(--m1);
+      }
+      .st[data-s='in_progress'] {
+        color: var(--m2);
+      }
+      .st[data-s='in_progress'] i {
+        background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+      }
+      .st[data-s='closed'] {
+        color: var(--m3);
+      }
+      .st[data-s='closed'] i {
+        background: currentColor;
+      }
+      .pri {
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        color: var(--ink-2);
+      }
+      .pri[data-p='high'] {
+        color: var(--signal);
+      }
+
+      /* Atomic write */
+      .aw-stage {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .aw-file {
+        display: grid;
+        gap: 6px;
+        padding: 12px;
+        background: var(--paper);
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-2);
+        transition:
+          opacity 0.3s,
+          transform 0.45s var(--ease),
+          border-color 0.3s,
+          background 0.3s;
+      }
+      .aw-file.snap {
+        transition: none;
+      }
+      .aw-name {
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        overflow-wrap: anywhere;
+      }
+      .aw-meta {
+        font-size: var(--t-meta);
+        color: var(--ink-2);
+      }
+      .aw-meta b {
+        font-family: var(--font-mono);
+        color: var(--ink);
+      }
+      .aw-tmp {
+        opacity: 0.35;
+        border-style: dashed;
+      }
+      .aw-tmp.active {
+        opacity: 1;
+      }
+      .aw-bar {
+        height: 6px;
+        overflow: hidden;
+        background: var(--paper-3);
+        border-radius: 3px;
+      }
+      .aw-bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--m1);
+        transition: width 0.9s linear;
+      }
+      .aw-tmp.renaming {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.9);
+      }
+      html[dir='rtl'] .aw-tmp.renaming {
+        transform: translateX(50%) scale(0.9);
+      }
+      .aw-tmp.crashed {
+        border-color: var(--signal);
+        background: var(--signal-wash);
+        animation: shake 0.4s;
+      }
+      .aw-tmp.crashed .aw-bar i {
+        background: var(--signal);
+      }
+      .flash-ok {
+        animation: flashOk 0.9s var(--ease);
+      }
+      .flash-new {
+        animation: flashNew 0.9s var(--ease);
+      }
+
+      /* URL state */
+      .urlbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 10px 4px 4px;
+        background: var(--paper);
+        border: 1px solid var(--rule-strong);
+        border-radius: 6px;
+        direction: ltr;
+      }
+      .url-back {
+        width: 28px;
+        height: 28px;
+        flex: none;
+        font: inherit;
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--rule);
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      .url-back:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .url-text {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        text-align: left;
+        overflow-wrap: anywhere;
+      }
+      .url-text .q {
+        color: var(--ink-3);
+      }
+      .url-text .p.flash {
+        color: var(--signal);
+        background: var(--signal-wash);
+        border-radius: 2px;
+        animation: flashNew 1.2s var(--ease);
+      }
+      .mini-wrap {
+        overflow-x: auto;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+      }
+      table.mini {
+        font-size: var(--t-meta);
+      }
+      table.mini td {
+        padding: 7px 10px;
+      }
+      table.mini .num {
+        font-family: var(--font-mono);
+        color: var(--ink-3);
+      }
+      table.mini tr.closed .ttl {
+        color: var(--ink-2);
+      }
+      table.mini tr.enter {
+        animation: rise 0.35s var(--ease) both;
+      }
+      table.mini .empty {
+        color: var(--ink-3);
+        text-align: center;
+      }
+
+      /* Optimistic save */
+      .opt-issue {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 12px;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+      }
+      .opt-issue .num {
+        font-family: var(--font-mono);
+        color: var(--ink-3);
+      }
+      .opt-title {
+        flex: 1;
+        min-width: 0;
+        font-weight: 500;
+      }
+      .opt-issue.rollback {
+        border-color: var(--signal);
+        animation: shake 0.45s;
+      }
+      .opt-wire {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-mono);
+        font-size: var(--t-micro);
+        color: var(--ink-3);
+      }
+      .wire {
+        position: relative;
+        flex: 1;
+        height: 2px;
+        background: var(--rule-strong);
+      }
+      .wire i {
+        position: absolute;
+        top: -4px;
+        inset-inline-start: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--m1);
+        opacity: 0;
+        transition:
+          inset-inline-start 0.6s var(--ease),
+          opacity 0.2s,
+          background 0.2s;
+      }
+      .wire i.go {
+        opacity: 1;
+        inset-inline-start: calc(100% - 10px);
+      }
+      .wire i.back {
+        opacity: 1;
+        inset-inline-start: 0;
+      }
+      .wire i.ok {
+        background: var(--ok);
+      }
+      .wire i.err {
+        background: var(--signal);
+      }
+
+      /* Keyboard */
+      .kb-demo {
+        cursor: pointer;
+        transition: border-color 0.2s;
+      }
+      .kb-demo.focused {
+        border-color: var(--signal);
+      }
+      .kb-demo:focus-visible {
+        outline-offset: 3px;
+      }
+      .kb-stage {
+        position: relative;
+        min-height: 182px;
+        overflow: hidden;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius-2);
+      }
+      .kb-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .kb-list li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        font-size: var(--t-meta);
+        border-bottom: 1px solid var(--rule);
+        border-inline-start: 2px solid transparent;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .kb-list li .num {
+        font-family: var(--font-mono);
+        color: var(--ink-3);
+      }
+      .kb-list li.cur {
+        background: var(--paper-2);
+        border-inline-start-color: var(--signal);
+      }
+      .kb-panel {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-end: 0;
+        width: min(72%, 300px);
+        display: grid;
+        align-content: start;
+        gap: 8px;
+        padding: 14px;
+        background: var(--paper-2);
+        border-inline-start: 1px solid var(--rule-strong);
+        transform: translateX(105%);
+        visibility: hidden;
+        transition:
+          transform 0.25s var(--ease),
+          visibility 0.25s;
+      }
+      html[dir='rtl'] .kb-panel {
+        transform: translateX(-105%);
+      }
+      .kb-panel.open,
+      html[dir='rtl'] .kb-panel.open {
+        transform: none;
+        visibility: visible;
+      }
+      .kb-panel .num {
+        font-family: var(--font-mono);
+        font-size: var(--t-meta);
+        color: var(--ink-3);
+      }
+      .kb-keys .tbtn.pressed {
+        background: var(--signal);
+        color: var(--signal-ink);
+        border-color: var(--signal);
+        transform: translateY(1px);
+      }
+
+      /* Quiz */
+      .quiz-q {
+        font-weight: 500;
+      }
+      .quiz-opts {
+        display: grid;
+        gap: 8px;
+      }
+      .quiz-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: var(--t-small);
+        text-align: start;
+        background: var(--paper);
+        color: var(--ink);
+        border: 1px solid var(--rule-strong);
+        border-radius: var(--radius-2);
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s,
+          opacity 0.3s,
+          transform 0.15s var(--ease);
+      }
+      .quiz-opt::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        flex: none;
+        border: 1.5px solid var(--rule-strong);
+        border-radius: 50%;
+      }
+      .quiz-opt:hover {
+        border-color: var(--ink);
+        transform: translateX(3px);
+      }
+      html[dir='rtl'] .quiz-opt:hover {
+        transform: translateX(-3px);
+      }
+      .quiz-opt.right {
+        border-color: var(--ok);
+        background: var(--ok-wash);
+      }
+      .quiz-opt.right::before {
+        background: var(--ok);
+        border-color: var(--ok);
+        animation: pop 0.4s var(--ease);
+      }
+      .quiz-opt.wrong {
+        border-color: var(--signal);
+        animation: shake 0.4s;
+      }
+      .quiz-opt.wrong::before {
+        border-color: var(--signal);
+      }
+      .quiz.solved .quiz-opt:not(.right) {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .quiz-why {
+        font-size: var(--t-small);
+        color: var(--ink-2);
+        animation: rise 0.4s var(--ease) both;
+      }
+      .quiz-miss {
+        font-size: var(--t-small);
+        color: var(--signal);
+      }
+
+      /* Celebrations */
+      #confetti {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 60;
+      }
+      .toast {
+        position: fixed;
+        inset-inline: 0;
+        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        width: max-content;
+        max-width: calc(100% - 32px);
+        margin-inline: auto;
+        padding: 12px 18px;
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: 6px;
+        font-weight: 500;
+        z-index: 61;
+        opacity: 0;
+        transform: translateY(150%);
+        transition:
+          transform 0.4s var(--ease),
+          opacity 0.3s;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: none;
+      }
+
+      @media (max-width: 560px) {
+        .aw-stage {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-delay: 0s !important;
+          animation-iteration-count: 1 !important;
+        }
+        .hero h1 em::after {
+          transform: none;
+        }
+        .rv {
+          opacity: 1;
+          transform: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1121,6 +2075,7 @@
           </svg>
         </button>
       </div>
+      <span class="scroll-progress" id="scroll-progress" aria-hidden="true"></span>
     </header>
 
     <section class="hero gutter" id="top">
@@ -1165,6 +2120,19 @@
             ><span class="en">Browse the technologies</span
             ><span class="he">לספריית הטכנולוגיות</span></a
           >
+        </div>
+        <div class="hero-term" aria-hidden="true">
+          <div class="term-bar"><i></i><i></i><i></i><span>~/TaskForge</span></div>
+          <pre class="term-body" id="term"><span class="tp">$</span> npm run dev
+<span class="td">TaskForge API on http://127.0.0.1:3000</span>
+<span class="td">VITE ready → http://localhost:5173</span>
+<span class="tp">$</span> curl -X POST :3000/projects -H "Accept-Language: he" \
+<span class="td">  -d '{"name":"אתר החברה"}'</span>
+<span class="te">409 Conflict</span>
+{"error":{"code":"CONFLICT",
+  "message":"פרויקט בשם \"אתר החברה\" כבר קיים"}}
+<span class="tp">$</span> npm test
+<span class="tok">✓ shared  ✓ storage  ✓ api  ✓ client</span><span class="caret"></span></pre>
         </div>
       </div>
     </section>
@@ -1450,6 +2418,17 @@
             </div>
           </div>
 
+          <div class="journey">
+            <button type="button" class="btn" id="journey-play">
+              <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" /></svg>
+              <span class="en">Send a request</span><span class="he">שלחו בקשה</span>
+            </button>
+            <p class="journey-cap" id="journey-cap" aria-live="polite">
+              <span class="en">Press the button to follow one request through every layer.</span
+              ><span class="he">לחצו על הכפתור כדי לעקוב אחרי בקשה אחת דרך כל השכבות.</span>
+            </p>
+          </div>
+
           <div class="prose prose-after">
             <details class="more">
               <summary>
@@ -1686,6 +2665,47 @@
               >
             </div>
           </article>
+          <div class="quiz">
+            <div class="demo-head">
+              <span class="demo-tag"
+                ><span class="en">Quick check</span><span class="he">בדיקה מהירה</span></span
+              >
+              <span class="demo-title"
+                ><span class="en">Module 1</span><span class="he">פרק 1</span></span
+              >
+            </div>
+            <p class="quiz-q">
+              <span class="en">Why did we write PLAN.md before any code?</span
+              ><span class="he">למה כתבנו את PLAN.md לפני כל קוד?</span>
+            </p>
+            <div class="quiz-opts">
+              <button type="button" class="quiz-opt">
+                <span class="en">Node.js won't start without it</span
+                ><span class="he">Node.js לא יעלה בלעדיו</span>
+              </button>
+              <button type="button" class="quiz-opt" data-ok="1">
+                <span class="en">Changing a plan is much cheaper than changing code</span
+                ><span class="he">לשנות תוכנית הרבה יותר זול מלשנות קוד</span>
+              </button>
+              <button type="button" class="quiz-opt">
+                <span class="en">GitHub requires a plan file</span
+                ><span class="he">GitHub מחייב קובץ תוכנית</span>
+              </button>
+            </div>
+            <p class="quiz-miss" hidden>
+              <span class="en">Not quite. Try another answer.</span
+              ><span class="he">לא בדיוק. נסו תשובה אחרת.</span>
+            </p>
+            <p class="quiz-why" hidden>
+              <span class="en"
+                >Right! The hard decisions (IDs, cascade delete, PUT vs PATCH) were made on paper,
+                where changes cost nothing.</span
+              ><span class="he"
+                >נכון! את ההחלטות הקשות (מזהים, מחיקה מדורגת, PUT מול PATCH) קיבלנו על הנייר, שם
+                שינוי לא עולה כלום.</span
+              >
+            </p>
+          </div>
         </section>
 
         <!-- ===================== MODULE 2 ===================== -->
@@ -1855,6 +2875,42 @@
                 >, כך שאות עם ניקוד או אימוג'י לא נספרים פעמיים. המיון משתמש
                 ב-<code>Intl.Collator</code>, כך שכותרות בעברית יוצאות לפי סדר האלף-בית.
               </p>
+              <div class="demo" id="demo-lang">
+                <div class="demo-head">
+                  <span class="demo-tag"
+                    ><span class="en">Try it</span><span class="he">נסו בעצמכם</span></span
+                  >
+                  <span class="demo-title"
+                    ><span class="en">One request, two languages</span
+                    ><span class="he">בקשה אחת, שתי שפות</span></span
+                  >
+                </div>
+                <div class="demo-row">
+                  <button type="button" class="tbtn" data-al="en" aria-pressed="false">
+                    Accept-Language: en
+                  </button>
+                  <button type="button" class="tbtn" data-al="he" aria-pressed="true">
+                    Accept-Language: he
+                  </button>
+                </div>
+                <pre
+                  class="code"
+                ><span class="file">POST /projects  {"name":"אתר החברה"}  →  409 Conflict</span>{
+  "error": {
+    "code": <span class="s hl-stay">"CONFLICT"</span>,
+    "message": <span class="s" id="lang-msg">"פרויקט בשם \"אתר החברה\" כבר קיים"</span>
+  }
+}</pre>
+                <p class="demo-note">
+                  <span class="en"
+                    >Switch the header. The <code>code</code> (dashed box) never changes. Only
+                    <code>message</code> is translated.</span
+                  ><span class="he"
+                    >החליפו את הכותרת. ה-<code>code</code> (במסגרת המקווקוות) אף פעם לא משתנה. רק
+                    <code>message</code> מתורגם.</span
+                  >
+                </p>
+              </div>
               <div class="key">
                 <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
                 <p class="en">
@@ -2159,6 +3215,46 @@ PATCH  /projects/:projectId/issues/:issueId</pre>
                   </li>
                 </ul>
               </div>
+              <div class="demo" id="demo-atomic">
+                <div class="demo-head">
+                  <span class="demo-tag"
+                    ><span class="en">Try it</span><span class="he">נסו בעצמכם</span></span
+                  >
+                  <span class="demo-title"
+                    ><span class="en">Save a file safely</span
+                    ><span class="he">שמירה בטוחה של קובץ</span></span
+                  >
+                </div>
+                <div class="aw-stage">
+                  <div class="aw-file aw-main" id="aw-main">
+                    <span class="aw-name">taskforge.json</span>
+                    <span class="aw-meta"
+                      ><span class="en">issues:</span><span class="he">סוגיות:</span>
+                      <b id="aw-count">12</b></span
+                    >
+                  </div>
+                  <div class="aw-file aw-tmp" id="aw-tmp">
+                    <span class="aw-name">taskforge.json.tmp</span>
+                    <span class="aw-bar"><i id="aw-fill"></i></span>
+                  </div>
+                </div>
+                <div class="demo-row">
+                  <button type="button" class="tbtn" id="aw-save">
+                    <span class="en">Save a change</span><span class="he">שמרו שינוי</span>
+                  </button>
+                  <button type="button" class="tbtn" id="aw-crash">
+                    <span class="en">Crash in the middle</span><span class="he">קריסה באמצע</span>
+                  </button>
+                </div>
+                <p class="demo-note" id="aw-note" aria-live="polite">
+                  <span class="en"
+                    >Press a button. The real file is replaced only after the new copy is fully
+                    written.</span
+                  ><span class="he"
+                    >לחצו על כפתור. הקובץ האמיתי מוחלף רק אחרי שהעותק החדש נכתב עד הסוף.</span
+                  >
+                </p>
+              </div>
               <div class="key">
                 <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
                 <p class="en">
@@ -2232,6 +3328,50 @@ app.listen(config.port, config.host);</pre>
               >
             </div>
           </article>
+          <div class="quiz">
+            <div class="demo-head">
+              <span class="demo-tag"
+                ><span class="en">Quick check</span><span class="he">בדיקה מהירה</span></span
+              >
+              <span class="demo-title"
+                ><span class="en">Module 2</span><span class="he">פרק 2</span></span
+              >
+            </div>
+            <p class="quiz-q">
+              <span class="en">A service finds that a project doesn't exist. What does it do?</span
+              ><span class="he">service מגלה שפרויקט לא קיים. מה הוא עושה?</span>
+            </p>
+            <div class="quiz-opts">
+              <button type="button" class="quiz-opt">
+                <span class="en">Builds a 404 JSON response by itself</span
+                ><span class="he">בונה בעצמו תשובת JSON עם 404</span>
+              </button>
+              <button type="button" class="quiz-opt">
+                <span class="en">Returns null to the browser</span
+                ><span class="he">מחזיר null לדפדפן</span>
+              </button>
+              <button type="button" class="quiz-opt" data-ok="1">
+                <span class="en"
+                  >Throws a NotFoundError. The central error handler builds the response</span
+                ><span class="he">זורק NotFoundError, וה-error handler המרכזי בונה את התשובה</span>
+              </button>
+            </div>
+            <p class="quiz-miss" hidden>
+              <span class="en">Not quite. Try another answer.</span
+              ><span class="he">לא בדיוק. נסו תשובה אחרת.</span>
+            </p>
+            <p class="quiz-why" hidden>
+              <span class="en"
+                >Right! Services only throw. One error handler turns every error into
+                <code>{ error: { code, message } }</code> in the right language.</span
+              ><span class="he"
+                >נכון! services רק זורקים. error handler אחד הופך כל שגיאה ל-<code
+                  >{ error: { code, message } }</code
+                >
+                בשפה הנכונה.</span
+              >
+            </p>
+          </div>
         </section>
 
         <!-- ===================== MODULE 3 ===================== -->
@@ -2468,6 +3608,104 @@ app.listen(config.port, config.host);</pre>
                   <li>Container queries: הטבלה מתאימה את עצמה לרוחב שלה, ולא לרוחב החלון</li>
                 </ul>
               </div>
+              <div class="demo" id="demo-url">
+                <div class="demo-head">
+                  <span class="demo-tag"
+                    ><span class="en">Try it</span><span class="he">נסו בעצמכם</span></span
+                  >
+                  <span class="demo-title"
+                    ><span class="en">Watch the URL change</span
+                    ><span class="he">צפו ב-URL משתנה</span></span
+                  >
+                </div>
+                <div class="urlbar">
+                  <button type="button" class="url-back" id="url-back" aria-label="Back" disabled>
+                    ←
+                  </button>
+                  <span class="url-text" id="url-text">localhost:5173/p/web</span>
+                </div>
+                <div class="demo-row">
+                  <span class="demo-label">status</span>
+                  <button type="button" class="tbtn" data-k="status" data-v="" aria-pressed="true">
+                    <span class="en">all</span><span class="he">הכול</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="status"
+                    data-v="open"
+                    aria-pressed="false"
+                  >
+                    open
+                  </button>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="status"
+                    data-v="in_progress"
+                    aria-pressed="false"
+                  >
+                    in progress
+                  </button>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="status"
+                    data-v="closed"
+                    aria-pressed="false"
+                  >
+                    closed
+                  </button>
+                </div>
+                <div class="demo-row">
+                  <span class="demo-label">priority</span>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="priority"
+                    data-v=""
+                    aria-pressed="true"
+                  >
+                    <span class="en">any</span><span class="he">כל</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="priority"
+                    data-v="high"
+                    aria-pressed="false"
+                  >
+                    high
+                  </button>
+                </div>
+                <div class="demo-row">
+                  <span class="demo-label">sort</span>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="sort"
+                    data-v="-createdAt"
+                    aria-pressed="true"
+                  >
+                    <span class="en">newest</span><span class="he">החדש ביותר</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="tbtn"
+                    data-k="sort"
+                    data-v="createdAt"
+                    aria-pressed="false"
+                  >
+                    <span class="en">oldest</span><span class="he">הישן ביותר</span>
+                  </button>
+                </div>
+                <div class="mini-wrap">
+                  <table class="mini">
+                    <tbody id="url-rows"></tbody>
+                  </table>
+                </div>
+                <p class="demo-note" id="url-note" aria-live="polite"></p>
+              </div>
               <div class="key">
                 <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
                 <p class="en">
@@ -2533,6 +3771,55 @@ app.listen(config.port, config.host);</pre>
                   </p>
                 </div>
               </details>
+              <div class="demo" id="demo-opt">
+                <div class="demo-head">
+                  <span class="demo-tag"
+                    ><span class="en">Try it</span><span class="he">נסו בעצמכם</span></span
+                  >
+                  <span class="demo-title"
+                    ><span class="en">Optimistic save, with rollback</span
+                    ><span class="he">שמירה אופטימית, עם ביטול</span></span
+                  >
+                </div>
+                <div class="opt-issue" id="opt-issue">
+                  <span class="num">#12</span>
+                  <span class="opt-title" dir="auto">Login fails on Safari</span>
+                  <span class="st" id="opt-status" data-s="open"><i></i><span>open</span></span>
+                </div>
+                <div class="demo-row">
+                  <span class="demo-label"
+                    ><span class="en">set status</span><span class="he">סטטוס</span></span
+                  >
+                  <button type="button" class="tbtn" data-set="open" aria-pressed="true">
+                    open
+                  </button>
+                  <button type="button" class="tbtn" data-set="in_progress" aria-pressed="false">
+                    in progress
+                  </button>
+                  <button type="button" class="tbtn" data-set="closed" aria-pressed="false">
+                    closed
+                  </button>
+                </div>
+                <div class="demo-row">
+                  <span class="demo-label"
+                    ><span class="en">server</span><span class="he">השרת</span></span
+                  >
+                  <button type="button" class="tbtn" data-srv="ok" aria-pressed="true">
+                    <span class="en">accepts</span><span class="he">מאשר</span>
+                  </button>
+                  <button type="button" class="tbtn" data-srv="fail" aria-pressed="false">
+                    <span class="en">rejects</span><span class="he">דוחה</span>
+                  </button>
+                </div>
+                <div class="opt-wire" aria-hidden="true">
+                  <span>UI</span><span class="wire"><i id="opt-packet"></i></span><span>API</span>
+                </div>
+                <p class="demo-note" id="opt-note" aria-live="polite">
+                  <span class="en"
+                    >Change the status. Then set the server to "rejects" and try again.</span
+                  ><span class="he">שנו את הסטטוס. אחר כך העבירו את השרת ל"דוחה" ונסו שוב.</span>
+                </p>
+              </div>
               <label class="done-toggle"
                 ><input type="checkbox" id="done-l14" data-lesson="l14" /><span class="en"
                   >Mark lesson as done</span
@@ -2563,6 +3850,41 @@ app.listen(config.port, config.host);</pre>
                 <kbd>Enter</kbd> פותח את הסוגיה, <kbd>/</kbd> קופץ לחיפוש ו-<kbd>?</kbd> מציג את כל
                 הקיצורים.
               </p>
+              <div
+                class="demo kb-demo"
+                id="demo-keys"
+                tabindex="0"
+                aria-label="Keyboard demo. Press J, K, Enter or Escape."
+              >
+                <div class="demo-head">
+                  <span class="demo-tag"
+                    ><span class="en">Try it</span><span class="he">נסו בעצמכם</span></span
+                  >
+                  <span class="demo-title"
+                    ><span class="en">Drive it with the keyboard</span
+                    ><span class="he">נווטו עם המקלדת</span></span
+                  >
+                </div>
+                <p class="demo-note">
+                  <span class="en"
+                    >Click inside this box, then press <kbd>J</kbd> <kbd>K</kbd> <kbd>Enter</kbd>
+                    <kbd>Esc</kbd>. On a phone, tap the keys below.</span
+                  ><span class="he"
+                    >לחצו בתוך התיבה, ואז הקישו <kbd>J</kbd> <kbd>K</kbd> <kbd>Enter</kbd>
+                    <kbd>Esc</kbd>. בטלפון, הקישו על המקשים למטה.</span
+                  >
+                </p>
+                <div class="kb-stage">
+                  <ul class="kb-list" id="kb-list"></ul>
+                  <div class="kb-panel" id="kb-panel"></div>
+                </div>
+                <div class="demo-row kb-keys">
+                  <button type="button" class="tbtn" data-kb="j">J ↓</button>
+                  <button type="button" class="tbtn" data-kb="k">K ↑</button>
+                  <button type="button" class="tbtn" data-kb="enter">Enter</button>
+                  <button type="button" class="tbtn" data-kb="escape">Esc</button>
+                </div>
+              </div>
               <div class="key">
                 <h4><span class="en">Key idea</span><span class="he">רעיון מרכזי</span></h4>
                 <p class="en">
@@ -2581,6 +3903,44 @@ app.listen(config.port, config.host);</pre>
               >
             </div>
           </article>
+          <div class="quiz">
+            <div class="demo-head">
+              <span class="demo-tag"
+                ><span class="en">Quick check</span><span class="he">בדיקה מהירה</span></span
+              >
+              <span class="demo-title"
+                ><span class="en">Module 3</span><span class="he">פרק 3</span></span
+              >
+            </div>
+            <p class="quiz-q">
+              <span class="en"
+                >Where does the issues table keep its filters, search, sort and page?</span
+              ><span class="he">איפה טבלת הסוגיות שומרת את הפילטרים, החיפוש, המיון והעמוד?</span>
+            </p>
+            <div class="quiz-opts">
+              <button type="button" class="quiz-opt">
+                <span class="en">In React state</span><span class="he">ב-state של React</span>
+              </button>
+              <button type="button" class="quiz-opt">
+                <span class="en">In localStorage</span><span class="he">ב-localStorage</span>
+              </button>
+              <button type="button" class="quiz-opt" data-ok="1">
+                <span class="en">In the URL</span><span class="he">ב-URL</span>
+              </button>
+            </div>
+            <p class="quiz-miss" hidden>
+              <span class="en">Not quite. Try another answer.</span
+              ><span class="he">לא בדיוק. נסו תשובה אחרת.</span>
+            </p>
+            <p class="quiz-why" hidden>
+              <span class="en"
+                >Right! That's why Back works, a refresh keeps your filters, and you can share a
+                link.</span
+              ><span class="he"
+                >נכון! בגלל זה כפתור "אחורה" עובד, רענון שומר את הפילטרים, ואפשר לשתף קישור.</span
+              >
+            </p>
+          </div>
         </section>
 
         <!-- ===================== MODULE 4 ===================== -->
@@ -2749,6 +4109,46 @@ npm run e2e                                        <span class="c"># for UI chan
               >
             </div>
           </article>
+          <div class="quiz">
+            <div class="demo-head">
+              <span class="demo-tag"
+                ><span class="en">Quick check</span><span class="he">בדיקה מהירה</span></span
+              >
+              <span class="demo-title"
+                ><span class="en">Module 4</span><span class="he">פרק 4</span></span
+              >
+            </div>
+            <p class="quiz-q">
+              <span class="en">When is a task "done" in TaskForge?</span
+              ><span class="he">מתי משימה ב-TaskForge נחשבת גמורה?</span>
+            </p>
+            <div class="quiz-opts">
+              <button type="button" class="quiz-opt">
+                <span class="en">When the code compiles</span><span class="he">כשהקוד מתקמפל</span>
+              </button>
+              <button type="button" class="quiz-opt" data-ok="1">
+                <span class="en"
+                  >When typecheck, lint and tests all pass (plus e2e for UI changes)</span
+                ><span class="he">כש-typecheck, lint והבדיקות עוברים (ו-e2e לשינויי ממשק)</span>
+              </button>
+              <button type="button" class="quiz-opt">
+                <span class="en">When it works on my machine</span
+                ><span class="he">כשזה עובד אצלי במחשב</span>
+              </button>
+            </div>
+            <p class="quiz-miss" hidden>
+              <span class="en">Not quite. Try another answer.</span
+              ><span class="he">לא בדיוק. נסו תשובה אחרת.</span>
+            </p>
+            <p class="quiz-why" hidden>
+              <span class="en"
+                >Right! "Done" has a written definition in CLAUDE.md, and every check must
+                pass.</span
+              ><span class="he"
+                >נכון! ל"גמור" יש הגדרה כתובה ב-CLAUDE.md, וכל הבדיקות חייבות לעבור.</span
+              >
+            </p>
+          </div>
         </section>
 
         <!-- ===================== LIBRARY ===================== -->
@@ -4363,6 +5763,725 @@ expect(res.body.error.code).toBe(<span class="s">'VALIDATION_ERROR'</span>);</pr
         }
         window.addEventListener('hashchange', openTarget);
         openTarget();
+      })();
+    </script>
+
+    <canvas id="confetti" aria-hidden="true"></canvas>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var slice = function (list) {
+          return Array.prototype.slice.call(list);
+        };
+        var $ = function (id) {
+          return document.getElementById(id);
+        };
+        function L(en, he) {
+          return '<span class="en">' + en + '</span><span class="he">' + he + '</span>';
+        }
+        function wait(ms) {
+          return new Promise(function (resolve) {
+            setTimeout(resolve, reduce ? Math.min(ms, 40) : ms);
+          });
+        }
+        function esc(s) {
+          return s.replace(/[&<>"]/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+          });
+        }
+        function restart(el, cls) {
+          el.classList.remove(cls);
+          void el.offsetWidth;
+          el.classList.add(cls);
+        }
+        function statusHtml(s) {
+          return '<span class="st" data-s="' + s + '"><i></i>' + s.replace('_', ' ') + '</span>';
+        }
+
+        /* ---------- Confetti and toasts ---------- */
+        var canvas = $('confetti');
+        var ctx = canvas.getContext('2d');
+        var parts = [];
+        var running = false;
+        function palette() {
+          var cs = getComputedStyle(root);
+          return ['--signal', '--m1', '--m2', '--m3', '--m4'].map(function (v) {
+            return cs.getPropertyValue(v).trim();
+          });
+        }
+        function burst(x, y, count, power) {
+          if (reduce) return;
+          var dpr = window.devicePixelRatio || 1;
+          if (canvas.width !== innerWidth * dpr || canvas.height !== innerHeight * dpr) {
+            canvas.width = innerWidth * dpr;
+            canvas.height = innerHeight * dpr;
+          }
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          var colors = palette();
+          for (var i = 0; i < count; i++) {
+            var angle = Math.random() * Math.PI * 2;
+            var speed = (0.35 + Math.random() * 0.65) * power;
+            parts.push({
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - power * 0.7,
+              r: Math.random() * Math.PI,
+              vr: (Math.random() - 0.5) * 0.35,
+              w: 4 + Math.random() * 5,
+              h: 6 + Math.random() * 7,
+              c: colors[i % colors.length],
+              life: 0,
+            });
+          }
+          if (!running) {
+            running = true;
+            requestAnimationFrame(tick);
+          }
+        }
+        function tick() {
+          ctx.clearRect(0, 0, innerWidth, innerHeight);
+          parts = parts.filter(function (p) {
+            return p.life < 170 && p.y < innerHeight + 30;
+          });
+          parts.forEach(function (p) {
+            p.life++;
+            p.vy += 0.24;
+            p.vx *= 0.985;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.r += p.vr;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.r);
+            ctx.globalAlpha = Math.max(0, 1 - p.life / 170);
+            ctx.fillStyle = p.c;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+          });
+          if (parts.length) requestAnimationFrame(tick);
+          else running = false;
+        }
+        var toast = $('toast');
+        var toastTimer;
+        function showToast(html) {
+          toast.innerHTML = html;
+          toast.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () {
+            toast.classList.remove('show');
+          }, 3200);
+        }
+        function burstAt(el, count, power) {
+          var r = el.getBoundingClientRect();
+          burst(r.left + Math.min(r.width / 2, 40), r.top + r.height / 2, count, power);
+        }
+
+        /* ---------- Lesson progress celebrations ---------- */
+        var allBoxes = slice(document.querySelectorAll('input[data-lesson]'));
+        var modules = slice(document.querySelectorAll('.module'));
+        var checked = function (b) {
+          return b.checked;
+        };
+        allBoxes.forEach(function (box) {
+          box.addEventListener('change', function () {
+            if (!box.checked) return;
+            burstAt(box, 36, 7);
+            var count = allBoxes.filter(checked).length;
+            if (count === allBoxes.length) {
+              setTimeout(function () {
+                burst(innerWidth / 2, innerHeight / 3, 240, 15);
+              }, 200);
+              showToast(
+                L('Course complete. You built TaskForge!', 'סיימתם את הקורס. בניתם את TaskForge!'),
+              );
+              return;
+            }
+            var mod = box.closest('.module');
+            if (slice(mod.querySelectorAll('input[data-lesson]')).every(checked)) {
+              var n = modules.indexOf(mod) + 1;
+              setTimeout(function () {
+                burst(innerWidth / 2, innerHeight / 3, 130, 12);
+              }, 150);
+              showToast(L('Module ' + n + ' complete!', 'פרק ' + n + ' הושלם!'));
+            } else {
+              showToast(
+                L(
+                  'Nice! ' + count + ' of ' + allBoxes.length + ' lessons done',
+                  'יפה! ' + count + ' מתוך ' + allBoxes.length + ' שיעורים הושלמו',
+                ),
+              );
+            }
+          });
+        });
+
+        /* ---------- Hero: counting stats and a typing terminal ---------- */
+        if (!reduce) {
+          slice(document.querySelectorAll('.stat b')).forEach(function (b) {
+            var to = parseInt(b.textContent, 10);
+            var start = null;
+            b.textContent = '0';
+            function step(t) {
+              if (start === null) start = t;
+              var k = Math.min(1, (t - start) / 1200);
+              b.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+              if (k < 1) requestAnimationFrame(step);
+            }
+            setTimeout(function () {
+              requestAnimationFrame(step);
+            }, 350);
+          });
+        }
+
+        var term = $('term');
+        var SCRIPT = [
+          ['cmd', 'npm run dev'],
+          ['td', 'TaskForge API on http://127.0.0.1:3000'],
+          ['td', 'VITE ready → http://localhost:5173'],
+          ['cmd', 'curl -X POST :3000/projects -H "Accept-Language: he" \\'],
+          ['cont', '  -d \'{"name":"אתר החברה"}\''],
+          ['te', '409 Conflict'],
+          ['out', '{"error":{"code":"CONFLICT",'],
+          ['out', '  "message":"פרויקט בשם \\"אתר החברה\\" כבר קיים"}}'],
+          ['cmd', 'npm test'],
+          ['tok', '✓ shared  ✓ storage  ✓ api  ✓ client'],
+        ];
+        function termLine(kind, text) {
+          if (kind === 'cmd') return '<span class="tp">$</span> ' + esc(text);
+          if (kind === 'cont') return '<span class="td">' + esc(text) + '</span>';
+          if (kind === 'out') return esc(text);
+          return '<span class="' + kind + '">' + esc(text) + '</span>';
+        }
+        async function runTerminal() {
+          for (;;) {
+            var html = '';
+            for (var i = 0; i < SCRIPT.length; i++) {
+              var kind = SCRIPT[i][0];
+              var text = SCRIPT[i][1];
+              if (kind === 'cmd' || kind === 'cont') {
+                for (var j = 1; j <= text.length; j++) {
+                  term.innerHTML =
+                    html + termLine(kind, text.slice(0, j)) + '<span class="caret"></span>';
+                  await wait(kind === 'cont' ? 18 : 42);
+                }
+                await wait(kind === 'cmd' ? 380 : 120);
+              } else {
+                await wait(170);
+              }
+              html += termLine(kind, text) + '\n';
+              term.innerHTML = html + '<span class="caret"></span>';
+            }
+            await wait(6000);
+          }
+        }
+        if (!reduce) setTimeout(runTerminal, 900);
+
+        /* ---------- Reading progress ---------- */
+        var progress = $('scroll-progress');
+        function onScroll() {
+          var max = document.documentElement.scrollHeight - innerHeight;
+          progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, scrollY / max) : 0) + ')';
+        }
+        addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
+        /* ---------- Reveal below-the-fold blocks as they scroll in ---------- */
+        if (!reduce && 'IntersectionObserver' in window) {
+          var revealer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                var el = entry.target;
+                el.classList.add('in');
+                revealer.unobserve(el);
+                setTimeout(function () {
+                  el.classList.remove('rv', 'in');
+                  el.style.transitionDelay = '';
+                }, 1000);
+              });
+            },
+            { rootMargin: '0px 0px -8% 0px' },
+          );
+          slice(
+            document.querySelectorAll(
+              '.lesson, .tech, .module-head, .section-head, .demo, .quiz, .arch, .journey, .table-wrap, .gloss > div',
+            ),
+          ).forEach(function (el, i) {
+            if (el.getBoundingClientRect().top < innerHeight) return;
+            if (el.classList.contains('tech') || el.parentElement.classList.contains('gloss')) {
+              el.style.transitionDelay = (i % 2) * 90 + 'ms';
+            }
+            el.classList.add('rv');
+            revealer.observe(el);
+          });
+        }
+
+        /* ---------- Library filter: cards pop back in ---------- */
+        slice(document.querySelectorAll('[data-filter]')).forEach(function (button) {
+          button.addEventListener('click', function () {
+            var i = 0;
+            slice(document.querySelectorAll('#tech-grid .tech')).forEach(function (card) {
+              card.classList.remove('pop', 'rv', 'in');
+              if (card.hidden) return;
+              card.style.animationDelay = i++ * 35 + 'ms';
+              restart(card, 'pop');
+            });
+          });
+        });
+
+        /* ---------- Request journey ---------- */
+        var stack = slice(document.querySelectorAll('.arch-stack > *'));
+        var caption = $('journey-cap');
+        var playButton = $('journey-play');
+        var CAPTIONS = {
+          0: L(
+            'You open a project. React asks the API for its issues.',
+            'פתחתם פרויקט. React מבקש מהשרת את הסוגיות שלו.',
+          ),
+          2: L(
+            "Vite's proxy removes <code>/api</code> and forwards the request to port 3000.",
+            'הפרוקסי של Vite מוריד את <code>/api</code> ומעביר את הבקשה לפורט 3000.',
+          ),
+          4: L(
+            'Express runs the middleware (language, validation). Then the route calls a service.',
+            'Express מריץ את ה-middleware (שפה, ולידציה). אחר כך ה-route קורא ל-service.',
+          ),
+          6: L(
+            'The service asks the repository for the issues: filtered, sorted and paged.',
+            'ה-service מבקש מה-repository את הסוגיות: מסוננות, ממוינות ומחולקות לעמודים.',
+          ),
+          8: L(
+            'The repository reads the JSON data (kept in memory after the first load).',
+            'ה-repository קורא את המידע מקובץ ה-JSON (שנשמר בזיכרון אחרי הטעינה הראשונה).',
+          ),
+        };
+        var playing = false;
+        async function playJourney() {
+          if (playing) return;
+          playing = true;
+          playButton.disabled = true;
+          stack.forEach(function (el) {
+            el.classList.remove('lit', 'lit-ok', 'flow', 'up');
+          });
+          for (var i = 0; i < stack.length; i++) {
+            var el = stack[i];
+            if (el.classList.contains('arrow')) {
+              restart(el, 'flow');
+              await wait(450);
+            } else {
+              stack.forEach(function (x) {
+                x.classList.remove('lit');
+              });
+              el.classList.add('lit');
+              caption.innerHTML = CAPTIONS[i];
+              await wait(1500);
+            }
+          }
+          stack[stack.length - 1].classList.remove('lit');
+          caption.innerHTML = L(
+            'The answer travels back up: <code>200 OK</code> with JSON.',
+            'התשובה חוזרת למעלה: <code>200 OK</code> עם JSON.',
+          );
+          for (var k = stack.length - 1; k >= 0; k--) {
+            var step = stack[k];
+            if (step.classList.contains('arrow')) {
+              step.classList.remove('flow', 'up');
+              void step.offsetWidth;
+              step.classList.add('flow', 'up');
+              await wait(300);
+            } else {
+              step.classList.add('lit-ok');
+              await wait(140);
+            }
+          }
+          caption.innerHTML = L(
+            'React Query caches the answer and the table appears. The whole trip takes a few milliseconds.',
+            'React Query שומר את התשובה במטמון והטבלה מופיעה. כל המסע לוקח כמה מילישניות.',
+          );
+          await wait(2200);
+          stack.forEach(function (el) {
+            el.classList.remove('lit-ok', 'flow', 'up');
+          });
+          playing = false;
+          playButton.disabled = false;
+        }
+        playButton.addEventListener('click', playJourney);
+        if (!reduce && 'IntersectionObserver' in window) {
+          var autoplay = new IntersectionObserver(
+            function (entries) {
+              if (entries[0].isIntersecting) {
+                autoplay.disconnect();
+                setTimeout(playJourney, 400);
+              }
+            },
+            { threshold: 0.6 },
+          );
+          autoplay.observe(document.querySelector('.arch'));
+        }
+
+        /* ---------- Demo: Accept-Language ---------- */
+        var MESSAGES = {
+          en: '"A project named \\"אתר החברה\\" already exists"',
+          he: '"פרויקט בשם \\"אתר החברה\\" כבר קיים"',
+        };
+        var langMsg = $('lang-msg');
+        var langRun = 0;
+        var langButtons = slice(document.querySelectorAll('[data-al]'));
+        langButtons.forEach(function (button) {
+          button.addEventListener('click', async function () {
+            langButtons.forEach(function (b) {
+              b.setAttribute('aria-pressed', String(b === button));
+            });
+            var target = MESSAGES[button.dataset.al];
+            var run = ++langRun;
+            langMsg.classList.add('typing');
+            for (var j = 0; j <= target.length; j += 2) {
+              if (run !== langRun) return;
+              langMsg.textContent = target.slice(0, j);
+              await wait(18);
+            }
+            langMsg.textContent = target;
+            langMsg.classList.remove('typing');
+            restart(document.querySelector('#demo-lang .hl-stay'), 'flash-ok');
+          });
+        });
+
+        /* ---------- Demo: atomic write ---------- */
+        var awMain = $('aw-main');
+        var awTmp = $('aw-tmp');
+        var awFill = $('aw-fill');
+        var awCount = $('aw-count');
+        var awNote = $('aw-note');
+        var awButtons = [$('aw-save'), $('aw-crash')];
+        var issueCount = 12;
+        function resetTmp() {
+          awTmp.classList.add('snap');
+          awFill.style.transition = 'none';
+          awTmp.classList.remove('active', 'renaming', 'crashed');
+          awFill.style.width = '0';
+          void awTmp.offsetWidth;
+          awTmp.classList.remove('snap');
+          awFill.style.transition = '';
+        }
+        async function atomicWrite(crash) {
+          awButtons.forEach(function (b) {
+            b.disabled = true;
+          });
+          resetTmp();
+          awTmp.classList.add('active');
+          awNote.innerHTML = L(
+            '1. Write the new data to <code>taskforge.json.tmp</code>…',
+            '1. כותבים את המידע החדש ל-<code>taskforge.json.tmp</code>…',
+          );
+          await wait(250);
+          awFill.style.width = crash ? '55%' : '100%';
+          await wait(crash ? 550 : 1000);
+          if (crash) {
+            awTmp.classList.add('crashed');
+            awNote.innerHTML = L('Crash! The write stopped halfway…', 'קריסה! הכתיבה נעצרה באמצע…');
+            await wait(1400);
+            resetTmp();
+            restart(awMain, 'flash-ok');
+            awNote.innerHTML = L(
+              '…but <code>taskforge.json</code> was never touched. Your ' +
+                issueCount +
+                ' issues are safe.',
+              '…אבל לא נגענו ב-<code>taskforge.json</code>. ' +
+                issueCount +
+                ' הסוגיות שלכם בטוחות.',
+            );
+          } else {
+            awNote.innerHTML = L(
+              '2. Rename the <code>.tmp</code> file over the real one, in one step.',
+              '2. משנים את שם קובץ ה-<code>.tmp</code> לשם הקובץ האמיתי, בצעד אחד.',
+            );
+            await wait(700);
+            awTmp.classList.add('renaming');
+            await wait(450);
+            awCount.textContent = String(++issueCount);
+            restart(awMain, 'flash-ok');
+            resetTmp();
+            awNote.innerHTML = L(
+              'Saved. The file now has ' + issueCount + ' issues, and it was never half-written.',
+              'נשמר. בקובץ יש עכשיו ' + issueCount + ' סוגיות, והוא אף פעם לא היה כתוב בחצי.',
+            );
+          }
+          awButtons.forEach(function (b) {
+            b.disabled = false;
+          });
+        }
+        $('aw-save').addEventListener('click', function () {
+          atomicWrite(false);
+        });
+        $('aw-crash').addEventListener('click', function () {
+          atomicWrite(true);
+        });
+
+        /* ---------- Demo: URL state ---------- */
+        var ISSUES = [
+          { n: 12, t: 'Login fails on Safari', s: 'open', p: 'high' },
+          { n: 11, t: 'תיקון כיוון RTL בכותרות', s: 'in_progress', p: 'medium' },
+          { n: 10, t: 'Add CSV export', s: 'open', p: 'low' },
+          { n: 9, t: 'Slow search on large projects', s: 'in_progress', p: 'high' },
+          { n: 8, t: 'Typo on the settings page', s: 'closed', p: 'low' },
+          { n: 7, t: 'שגיאה בשמירת תיאור ארוך', s: 'closed', p: 'high' },
+        ];
+        var view = { status: '', priority: '', sort: '-createdAt' };
+        var viewHistory = [];
+        var changedKey = null;
+        var urlText = $('url-text');
+        var urlRows = $('url-rows');
+        var urlNote = $('url-note');
+        var urlBack = $('url-back');
+        var viewButtons = slice(document.querySelectorAll('[data-k]'));
+        function renderView(animate) {
+          var params = [];
+          ['status', 'priority', 'sort'].forEach(function (k) {
+            var v = view[k];
+            if (!v || (k === 'sort' && v === '-createdAt')) return;
+            params.push(
+              '<span class="p' +
+                (k === changedKey ? ' flash' : '') +
+                '">' +
+                k +
+                '=' +
+                v +
+                '</span>',
+            );
+          });
+          urlText.innerHTML =
+            'localhost:5173/p/web' +
+            (params.length
+              ? '<span class="q">?</span>' + params.join('<span class="q">&amp;</span>')
+              : '');
+          viewButtons.forEach(function (b) {
+            b.setAttribute('aria-pressed', String(view[b.dataset.k] === b.dataset.v));
+          });
+          var rows = ISSUES.filter(function (i) {
+            return (
+              (!view.status || i.s === view.status) && (!view.priority || i.p === view.priority)
+            );
+          });
+          rows.sort(function (a, b) {
+            return view.sort === 'createdAt' ? a.n - b.n : b.n - a.n;
+          });
+          urlRows.innerHTML = rows.length
+            ? rows
+                .map(function (r) {
+                  return (
+                    '<tr class="' +
+                    (r.s === 'closed' ? 'closed' : '') +
+                    '"><td class="num">#' +
+                    r.n +
+                    '</td><td class="ttl" dir="auto">' +
+                    esc(r.t) +
+                    '</td><td>' +
+                    statusHtml(r.s) +
+                    '</td><td><span class="pri" data-p="' +
+                    r.p +
+                    '">' +
+                    r.p +
+                    '</span></td></tr>'
+                  );
+                })
+                .join('')
+            : '<tr><td class="empty" colspan="4">' +
+              L('No issues match these filters.', 'אין סוגיות שמתאימות לפילטרים.') +
+              '</td></tr>';
+          if (animate) {
+            slice(urlRows.rows).forEach(function (tr, i) {
+              tr.style.animationDelay = i * 45 + 'ms';
+              tr.classList.add('enter');
+            });
+          }
+          urlNote.innerHTML = L(
+            'Showing ' +
+              rows.length +
+              ' of ' +
+              ISSUES.length +
+              '. Press ← to go back, just like the browser.',
+            'מוצגות ' +
+              rows.length +
+              ' מתוך ' +
+              ISSUES.length +
+              '. לחצו ← כדי לחזור אחורה, בדיוק כמו בדפדפן.',
+          );
+          urlBack.disabled = viewHistory.length === 0;
+        }
+        viewButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            if (view[b.dataset.k] === b.dataset.v) return;
+            viewHistory.push(Object.assign({}, view));
+            view[b.dataset.k] = b.dataset.v;
+            changedKey = b.dataset.k;
+            renderView(true);
+          });
+        });
+        urlBack.addEventListener('click', function () {
+          if (!viewHistory.length) return;
+          view = viewHistory.pop();
+          changedKey = null;
+          renderView(true);
+        });
+        renderView(false);
+
+        /* ---------- Demo: optimistic save ---------- */
+        var optIssue = $('opt-issue');
+        var optStatus = $('opt-status');
+        var optPacket = $('opt-packet');
+        var optNote = $('opt-note');
+        var setButtons = slice(document.querySelectorAll('[data-set]'));
+        var serverButtons = slice(document.querySelectorAll('[data-srv]'));
+        var serverAccepts = true;
+        var optBusy = false;
+        function setStatus(s) {
+          optStatus.dataset.s = s;
+          optStatus.querySelector('span').textContent = s.replace('_', ' ');
+          setButtons.forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.set === s));
+          });
+        }
+        serverButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            serverAccepts = b.dataset.srv === 'ok';
+            serverButtons.forEach(function (x) {
+              x.setAttribute('aria-pressed', String(x === b));
+            });
+          });
+        });
+        setButtons.forEach(function (b) {
+          b.addEventListener('click', async function () {
+            var previous = optStatus.dataset.s;
+            var next = b.dataset.set;
+            if (optBusy || previous === next) return;
+            optBusy = true;
+            optIssue.classList.remove('rollback');
+            setStatus(next);
+            restart(optIssue, 'flash-new');
+            optNote.innerHTML = L(
+              '1. The screen changes <strong>right away</strong>. Saving in the background…',
+              '1. המסך משתנה <strong>מיד</strong>. שומרים ברקע…',
+            );
+            optPacket.className = 'go';
+            await wait(750);
+            optPacket.className = (serverAccepts ? 'ok' : 'err') + ' back';
+            await wait(700);
+            optPacket.className = '';
+            if (serverAccepts) {
+              restart(optIssue, 'flash-ok');
+              optNote.innerHTML = L(
+                '2. The server answered <code>200 OK</code>. Saved ✓',
+                '2. השרת ענה <code>200 OK</code>. נשמר ✓',
+              );
+            } else {
+              setStatus(previous);
+              restart(optIssue, 'rollback');
+              optNote.innerHTML = L(
+                '2. The server answered <code>500</code>, so the change was <strong>rolled back</strong> to "' +
+                  previous.replace('_', ' ') +
+                  '".',
+                '2. השרת ענה <code>500</code>, ולכן השינוי <strong>בוטל</strong> וחזר ל-"' +
+                  previous.replace('_', ' ') +
+                  '".',
+              );
+            }
+            optBusy = false;
+          });
+        });
+
+        /* ---------- Demo: keyboard ---------- */
+        var KB_ISSUES = [
+          { n: 12, t: 'Login fails on Safari', s: 'open' },
+          { n: 11, t: 'תיקון כיוון RTL בכותרות', s: 'in_progress' },
+          { n: 10, t: 'Add CSV export', s: 'open' },
+          { n: 9, t: 'Slow search on large projects', s: 'in_progress' },
+          { n: 8, t: 'Typo on the settings page', s: 'closed' },
+        ];
+        var kbDemo = $('demo-keys');
+        var kbList = $('kb-list');
+        var kbPanel = $('kb-panel');
+        var cursor = 0;
+        kbList.innerHTML = KB_ISSUES.map(function (i) {
+          return (
+            '<li><span class="num">#' + i.n + '</span><span dir="auto">' + esc(i.t) + '</span></li>'
+          );
+        }).join('');
+        var kbItems = slice(kbList.children);
+        function renderCursor() {
+          kbItems.forEach(function (li, i) {
+            li.classList.toggle('cur', i === cursor);
+          });
+        }
+        function press(key) {
+          var button = kbDemo.querySelector('[data-kb="' + key + '"]');
+          if (button) {
+            button.classList.add('pressed');
+            setTimeout(function () {
+              button.classList.remove('pressed');
+            }, 160);
+          }
+          if (key === 'j') cursor = Math.min(KB_ISSUES.length - 1, cursor + 1);
+          if (key === 'k') cursor = Math.max(0, cursor - 1);
+          if (key === 'enter') {
+            var issue = KB_ISSUES[cursor];
+            kbPanel.innerHTML =
+              '<span class="num">#' +
+              issue.n +
+              '</span><strong dir="auto">' +
+              esc(issue.t) +
+              '</strong>' +
+              statusHtml(issue.s) +
+              '<span class="pri">' +
+              L('Esc closes this panel', 'Esc סוגר את הפאנל') +
+              '</span>';
+            kbPanel.classList.add('open');
+          }
+          if (key === 'escape') kbPanel.classList.remove('open');
+          renderCursor();
+        }
+        renderCursor();
+        kbDemo.addEventListener('keydown', function (e) {
+          var key = e.key.toLowerCase();
+          if (['j', 'k', 'enter', 'escape'].indexOf(key) === -1) return;
+          if (e.target !== kbDemo) return;
+          e.preventDefault();
+          press(key);
+        });
+        kbDemo.addEventListener('focus', function () {
+          kbDemo.classList.add('focused');
+        });
+        kbDemo.addEventListener('blur', function () {
+          kbDemo.classList.remove('focused');
+        });
+        kbDemo.addEventListener('click', function (e) {
+          var button = e.target.closest('[data-kb]');
+          if (button) press(button.dataset.kb);
+          kbDemo.focus({ preventScroll: true });
+        });
+
+        /* ---------- Quizzes ---------- */
+        slice(document.querySelectorAll('.quiz')).forEach(function (quiz) {
+          var miss = quiz.querySelector('.quiz-miss');
+          var why = quiz.querySelector('.quiz-why');
+          slice(quiz.querySelectorAll('.quiz-opt')).forEach(function (option) {
+            option.addEventListener('click', function () {
+              if (quiz.classList.contains('solved')) return;
+              if (option.dataset.ok) {
+                option.classList.add('right');
+                quiz.classList.add('solved');
+                miss.hidden = true;
+                why.hidden = false;
+                burstAt(option, 50, 8);
+              } else {
+                restart(option, 'wrong');
+                miss.hidden = false;
+              }
+            });
+          });
+        });
       })();
     </script>
   </body>
