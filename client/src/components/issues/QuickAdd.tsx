@@ -98,7 +98,7 @@ export function QuickAdd({ projectId, onClose, onOpenIssue }: QuickAddProps) {
           value={priority}
           onChange={setPriority}
         />
-        <Button type="submit" variant="primary" disabled={createIssue.isPending}>
+        <Button type="submit" disabled={createIssue.isPending}>
           {createIssue.isPending ? 'Creating…' : 'Create'}
         </Button>
         <Button variant="quiet" onClick={onClose}>

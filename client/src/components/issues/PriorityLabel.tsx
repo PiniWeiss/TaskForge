@@ -37,7 +37,7 @@ export function PriorityGlyph({ priority }: { priority: IssuePriority }) {
 
 export function PriorityLabel({ priority }: { priority: IssuePriority }) {
   return (
-    <span className={clsx(styles.label, styles[priority])}>
+    <span className={clsx(styles.label, priority === 'low' && styles.quiet)}>
       <PriorityGlyph priority={priority} />
       {PRIORITY_LABELS[priority]}
     </span>

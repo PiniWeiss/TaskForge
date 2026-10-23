@@ -52,9 +52,11 @@ lifted, and the status hues get lighter rather than more saturated.
 
 - Spacing tokens: `--s-1` 4 · `--s-2` 8 · `--s-3` 12 · `--s-4` 16 · `--s-5` 20 · `--s-6` 24 · `--s-8` 32 · `--s-10` 40.
 - Heights: header 56, toolbar 40, table row 32, controls 28.
-- Widths: sidebar 232, detail panel 520.
-- Below 768px the sidebar moves into a drawer, the table drops low-priority columns, and the
-  detail panel goes full-screen.
+- Widths: sidebar 232, detail panel 480 (420 below 1200px).
+- Below 768px the sidebar moves into a drawer and the detail panel goes full-screen.
+- The table and toolbar respond to the width of the issues column (container queries), not the
+  window, so opening the panel adapts them too: under 800px status becomes a select, under
+  760px Created drops, under 560px Priority drops and status shows only its glyph.
 
 ## Shape and elevation
 
@@ -83,7 +85,10 @@ lifted, and the status hues get lighter rather than more saturated.
   text alone is weaker: close, menu, more, search, sort direction, and the status and priority
   glyphs.
 - Status is a 12px circle (hollow, half, full) plus its word. Priority is three bars plus its
-  word. Only High uses the signal color.
+  word. Only High's bars use the signal color; the word stays ink.
+- Closed issues recede: their titles drop to `--ink-2`.
+- One vermilion action per view: New issue in the header. Secondary actions (Create in
+  quick-add, Retry, Clear filters) are outlined or quiet.
 - Bold is rare: 500 for labels and active controls, 600 for the project name only.
 - Copy is terse and specific: say what happened and what to do next. Timestamps are relative,
   with the absolute time on hover.

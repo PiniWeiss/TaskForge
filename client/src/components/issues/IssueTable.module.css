@@ -94,6 +94,11 @@
   text-align: left;
 }
 
+/* Finished entries recede so open work reads first. */
+.closed .titleLink {
+  color: var(--ink-2);
+}
+
 .titleLink:hover {
   text-decoration: underline;
   text-decoration-color: var(--rule-strong);
@@ -142,7 +147,7 @@ th.colCreated {
 }
 
 /* Column drop-off follows the width of the issues column, not the window. */
-@container issues (max-width: 639px) {
+@container issues (max-width: 759px) {
   .colCreated {
     display: none;
   }

@@ -177,6 +177,7 @@ export function IssueTable({
               styles.row,
               row.id === cursorId && styles.cursor,
               row.id === selectedId && styles.selected,
+              row.original.status === 'closed' && styles.closed,
             )}
             aria-current={row.id === selectedId ? 'true' : undefined}
             onClick={(event) => {

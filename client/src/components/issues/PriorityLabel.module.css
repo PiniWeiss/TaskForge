@@ -18,14 +18,19 @@
   fill: var(--rule);
 }
 
-.low {
+/* Color lives in the bars; only High's bars use the signal colour. The word stays ink. */
+.glyph.low {
   color: var(--ink-3);
 }
 
-.medium {
+.glyph.medium {
   color: var(--ink-2);
 }
 
-.high {
+.glyph.high {
   color: var(--signal);
+}
+
+.quiet {
+  color: var(--ink-2);
 }
